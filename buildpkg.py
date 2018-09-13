@@ -35,7 +35,7 @@ def buildpkg_make_project(pkgname, url):
     # 检查是否工程已经存在
     if os.path.exists(pkgname) == True:
         # Todo: 这里可以针对已经存在的包名做一个备份处理, 让用户体验感提升!
-        # print("[警告]: 指定的包名工程已经存在, 请重新输入包名!")
+        print("[警告]: 指定的包名工程已经存在, 请重新输入包名!")
         sys.exit(0)
 
     # 1. 克隆pkg模板仓库, 并修改名称为需要创建的包名(递归克隆)
@@ -60,10 +60,6 @@ def buildpkg_make_project(pkgname, url):
 
     # 3. 添加子模块
     os.system('git submodule add ' + url) 
-
-    # 4. Todo: 提交commit为第一版本
-    os.system('git add -A') 
-    os.system('git commit -m "Quick build ' + pkgname + 'pkg for rt-thread by buildpkg toolkits!"') 
 
     print("生成工程成功!") 
     
@@ -151,12 +147,21 @@ def buildpkg_make_scons(pkgname, version):
 
     print("生成scons脚本成功!") 
 
+def buildpkg_make_commit(pkgname):
+    print("提交commit中...") 
+    os.system('git add -A') 
+    os.system('git commit -m "Quick build ' + pkgname + 'pkg for rt-thread by buildpkg toolkits!"') 
+
+    print("提交commit成功!") 
+
 if __name__ == '__main__':
     args = parser.parse_args() 
 
     # 1. 生成工程 
     # 2. 生成许可证 
     # 3. 生成pkg scons脚本
+    # n. 生成pkg commit提交
     buildpkg_make_project(args.pkgname, args.url) 
     buildpkg_make_license(args.license) 
     buildpkg_make_scons(args.pkgname, args.version)
+    buildpkg_make_commit(args.pkgname)
