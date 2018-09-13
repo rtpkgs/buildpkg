@@ -1,4 +1,4 @@
-# 
+#coding:utf-8
 # @File:   buildpkg.py 
 # @Author: liu2guang
 # @Date:   2018-09-11 18:07:00
@@ -16,6 +16,8 @@ import stat
 import platform 
 
 # 模板仓库地址
+debug = False
+github_name = "xxx"
 rtthread_pkg_example = "https://github.com/rtpkgs/rtthread_pkg_example.git" 
 
 # 声明命令
@@ -139,19 +141,81 @@ def buildpkg_make_scons(pkgname, version):
 
     #os.chdir(pkgname) 
 
-    with open('SConscript', 'w') as f:
-        f.write(sconscript_head)
-        f.write('name    = \'' + pkgname + '\'\n')
-        f.write('version = \'' + version + '\'\n')
-        f.write(sconscript_tail)
+    with open('SConscript', 'w') as file:
+        file.write(sconscript_head)
+        file.write('name    = \'' + pkgname + '\'\n')
+        file.write('version = \'' + version + '\'\n')
+        file.write(sconscript_tail)
 
     print("生成scons脚本成功!") 
 
+github_ci_tail = '''language: c
+
+notifications:
+  email: true
+
+git:
+  depth: 3
+
+before_script:
+  - sudo apt-get update 
+  - "sudo apt-get -qq install gcc-multilib libc6:i386 libgcc1:i386 gcc-4.6-base:i386 libstdc++5:i386 libstdc++6:i386 libsdl-dev || true" 
+  - "[ $RTT_TOOL_CHAIN = 'sourcery-arm' ] && curl -s https://launchpadlibrarian.net/287101520/gcc-arm-none-eabi-5_4-2016q3-20160926-linux.tar.bz2 | sudo tar xjf - -C /opt && export RTT_EXEC_PATH=/opt/gcc-arm-none-eabi-5_4-2016q3/bin && /opt/gcc-arm-none-eabi-5_4-2016q3/bin/arm-none-eabi-gcc --version || true" 
+  
+  - git clone --depth=3 --branch=master https://github.com/RT-Thread/rt-thread.git ../RT-Thread 
+  
+  - export RTT_ROOT=/home/travis/build/$USER_NAME/RT-Thread
+  - "[ x$RTT_CC == x ] && export RTT_CC='gcc' || true"
+
+  - sudo mkdir $RTT_ROOT/bsp/$RTT_BSP/packages 
+  - sudo cp    /home/travis/build/$USER_NAME/$REPO_NAME/script/script_bspcfg $RTT_ROOT/bsp/$RTT_BSP/rtconfig.h
+  - sudo cp    /home/travis/build/$USER_NAME/$REPO_NAME/script/script_scons  $RTT_ROOT/bsp/$RTT_BSP/packages/SConscript
+  - sudo cp -r /home/travis/build/$USER_NAME/$REPO_NAME                      $RTT_ROOT/bsp/$RTT_BSP/packages/$REPO_NAME
+
+script:
+  - scons -C $RTT_ROOT/bsp/$RTT_BSP
+
+env:
+'''
+
+# 生成github ci脚本: 默认使用rt1050或者qeum-a9的bsp中测试
+def buildpkg_make_github_ci(pkgname): 
+    print("生成github ci脚本中...") 
+
+    with open('.travis.yml', 'w') as file:
+        file.write(github_ci_tail)
+        file.write("  - RTT_BSP='imxrt1052-evk' RTT_TOOL_CHAIN='sourcery-arm' USER_NAME='" + github_name + "' REPO_NAME='" + pkgname + "'")
+    
+    print("生成github ci脚本!") 
+
+readme_tail = '''# libcsv pkg #
+
+[![Build Status](https://travis-ci.org/liu2guang/libcsv.svg?branch=master)](https://travis-ci.org/liu2guang/libcsv)
+[![release](https://img.shields.io/badge/Release-v3.0.4-orange.svg)](https://github.com/liu2guang/libcsv/releases)
+---
+
+## 1、介绍
+## 2、获取方式
+## 3、使用说明 
+## 4、注意事项
+## 5、许可方式
+## 6、联系方式 & 感谢
+* 感谢：[liu2guang](https://github.com/liu2guang) 本pkg使用buildpkg工具快速自动构建! 
+* 维护：[github_name]().
+'''
+
+# 生成readme文件, 这里生成的代码是GB2312
+def buildpkg_make_readme(pkgname):
+    print("生成readme中...") 
+    with open('readme.md', 'w') as file:
+        file.write(readme_tail)
+    print("生成readme成功!") 
+
+# 生成pkg commit提交
 def buildpkg_make_commit(pkgname):
     print("提交commit中...") 
     os.system('git add -A') 
     os.system('git commit -m "Quick build ' + pkgname + 'pkg for rt-thread by buildpkg toolkits!"') 
-
     print("提交commit成功!") 
 
 if __name__ == '__main__':
@@ -161,7 +225,19 @@ if __name__ == '__main__':
     # 2. 生成许可证 
     # 3. 生成pkg scons脚本
     # n. 生成pkg commit提交
+    if debug == True: 
+        print("启动调试模式...")
+        # buildpkg_make_project(args.pkgname, args.url) 
+        # buildpkg_make_license(args.license) 
+        # buildpkg_make_scons(args.pkgname, args.version)
+        # buildpkg_make_github_ci(args.pkgname)
+        buildpkg_make_readme(args.pkgname)
+        # buildpkg_make_commit(args.pkgname)
+        exit(0)
+    
     buildpkg_make_project(args.pkgname, args.url) 
     buildpkg_make_license(args.license) 
     buildpkg_make_scons(args.pkgname, args.version)
+    buildpkg_make_github_ci(args.pkgname)
+    buildpkg_make_readme(args.pkgname)
     buildpkg_make_commit(args.pkgname)
