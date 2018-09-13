@@ -64,6 +64,8 @@ def buildpkg_make_project(pkgname, url):
     # 4. Todo: 提交commit为第一版本
     os.system('git add -A') 
     os.system('git commit -m "Quick build ' + pkgname + 'pkg for rt-thread by buildpkg toolkits!"') 
+
+    print("生成工程成功!") 
     
 # def buildpkg_update_license()
 #    # Todo
@@ -72,9 +74,21 @@ def buildpkg_make_project(pkgname, url):
 def buildpkg_make_license(license): 
     # Todo
     print("生成许可证中...")
+    print("生成许可证失败!") 
 
 # scons脚本文件头
-sconscript_head = '''import os
+sconscript_head = '''# 
+# @File:   SConscript 
+# @Author: buildpkg.py 
+# @Date:   2018-09-13 10:20:00
+#
+# @LICENSE: https://github.com/rtpkgs/buildpkg/blob/master/LICENSE.
+#
+# Change Logs:
+# Date           Author       Notes
+# 2018-09-11     buildpkg.py  Generate the scons script automatically.
+
+import os
 from building import * 
 
 # get current dir path
@@ -88,6 +102,27 @@ inc = []
 
 # scons脚本文件末尾
 sconscript_tail = '''
+# print debug info
+# print(name + '-' + version)
+# print('PKG_USING_' + name.upper()) 
+
+# add to project 
+def make_pkg(f):
+    fs = os.listdir(f)
+    for f1 in fs:
+        tmp_path = os.path.join(f, f1)
+
+        if os.path.isdir(tmp_path):
+            make_pkg(tmp_path)
+
+        else: 
+            if os.path.splitext(tmp_path)[1] == '.c':
+                src.append(tmp_path)
+            elif os.path.splitext(tmp_path)[1] == '.h':
+                inc.append(f)
+            
+make_pkg(cwd) 
+
 # add group to IDE project
 objs = DefineGroup(name + '-' + version, src, depend = ['PKG_USING_' + name.upper()], CPPPATH = inc)
 
@@ -108,13 +143,10 @@ def buildpkg_make_scons(pkgname, version):
 
     #os.chdir(pkgname) 
 
-    with open('Sconsript', 'w') as f:
+    with open('SConscript', 'w') as f:
         f.write(sconscript_head)
         f.write('name    = \'' + pkgname + '\'\n')
         f.write('version = \'' + version + '\'\n')
-
-        # Todo: 添加
-
         f.write(sconscript_tail)
 
     print("生成scons脚本成功!") 
@@ -124,10 +156,7 @@ if __name__ == '__main__':
 
     # 1. 生成工程 
     # 2. 生成许可证 
+    # 3. 生成pkg scons脚本
     buildpkg_make_project(args.pkgname, args.url) 
     buildpkg_make_license(args.license) 
     buildpkg_make_scons(args.pkgname, args.version)
-
-# inc = inc + [cwd + "/include"]
-# inc = inc + [cwd + "/include/id3v2lib"]
-# src = src + Glob('./id3v2lib/src/*.c') 
