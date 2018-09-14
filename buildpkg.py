@@ -91,14 +91,14 @@ def buildpkg_make_base_package(name, pkgrepo, version, license, output):
     package_path = os.path.join(output, name)
 
     # check dir or file is exist
-    if os.path.exists(name) == True: 
-        old_name = name + "_old_" + time.strftime("%Y%m%d%H%M%S", time.localtime()) 
-        log.warning("%s dir or file already existed, backup to %s!" %(name, old_name))
-        os.rename(name, old_name)
+    if os.path.exists(package_path) == True: 
+        old_package_path = package_path + "_old_" + time.strftime("%Y%m%d%H%M%S", time.localtime()) 
+        log.warning("%s dir or file already existed, backup to %s!" %(name, old_package_path))
+        os.rename(package_path, old_old_package_pathname)
 
     # make package directory
-    os.mkdir(name)
-    log.info("%s pkg generate directory success!" % name) 
+    os.mkdir(package_path)
+    log.info("%s pkg generate directory success!" % package_path) 
 
     # add SConscript file
     # add Readme.md file

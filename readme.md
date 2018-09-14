@@ -1,13 +1,15 @@
 ## buildpkg for rt-thread 
 
+[![release](https://img.shields.io/badge/release-v0.1.0-orange.svg)]()
+[![buildpkg](https://img.shields.io/badge/build-pass-blue.svg)]()
+
 ### 1. 使用方法
 ```cmd
-1. python .\buildpkg.py cstring --url=https://github.com/liu2guang/cstring.git -v 1.0.1 
-2. python .\buildpkg.py argparse --url=https://github.com/cofyc/argparse.git -v 1.0.0
+python .\buildpkg.py cstring https://github.com/liu2guang/cstring.git --version=1.0.0 -l MIT 
 ```
 
-### 2. 设计功能(待仔细分析)
+### 2. 设计功能
 
-功能设计目前不完善, 大家可以提提自己的想法. 
+功能设计目前不完善, 大家可以提提自己的想法. 以下为待完成功能: 
 
-![功能设计](https://i.imgur.com/HOXRNM2.png)
+![功能](https://i.imgur.com/gKehWKr.png)
