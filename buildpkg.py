@@ -6,8 +6,9 @@
 # @LICENSE: https://github.com/rtpkgs/buildpkg/blob/master/LICENSE.
 #
 # Change Logs:
-# Date           Author       Notes
-# 2018-09-11     liu2guang    The first version.
+# Date           Author       Notes 
+# 2018-09-11     liu2guang    The first version. 
+# 2018-09-15     liu2guang    Refactor the entire business layer logic. 
 
 import os, sys
 import logging
@@ -15,120 +16,135 @@ import argparse
 import time
 import shutil 
 
-template_readme_name     = "template-readme-v1.0.0.md"
-template_sconscript_name = "template-sconscript-v1.0.0"
-
-# buildpkg log
-log = logging.getLogger('buildpkg') 
-log.setLevel(logging.DEBUG)
-format = logging.Formatter('[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s')
-
-# output console
-c = logging.StreamHandler()
-c.setLevel(logging.INFO)
-c.setFormatter(format)
-log.addHandler(c)
-
-# output log file
-f = logging.FileHandler('buildpkg.log')
-f.setLevel(logging.DEBUG)
-f.setFormatter(format)
-log.addHandler(f)
+# buildpkg config
+config = {
+    "output_path": ".\\packages", 
+    "template":{
+        "readme"    : ".\\template\\template-readme.txt", 
+        "sconscript": ".\\template\\template-sconscript.txt"
+    }, 
+    "default_version": "v1.0.0"
+}
 
 # buildpkg cmd
 parser = argparse.ArgumentParser(
     description = "Quick build rt-thread pkg toolkits")
-parser.add_argument(  "pkgname",       type = str, help = "The package name to be created") 
-parser.add_argument(  "pkgrepo",       type = str, help = "Build the package from the specified git repository", nargs = "?", default = "None") 
-parser.add_argument('--version', '-v', type = str, help = 'The version of package', default = "v1.0.0a") 
-parser.add_argument('--output' , '-o', type = str, help = 'The output path of buildpkg package', default = "./") 
-parser.add_argument('--license', '-l', type = str, help = 'The license of package', default = "None") 
+parser.add_argument(  "action" ,       type = str, help = "The action of build package by buildpkg", choices=["make", "update"]) 
+parser.add_argument(  "pkgname",       type = str, help = "The package name to be make or update") 
+parser.add_argument(  "pkgrepo",       type = str, help = "To make the package from the specified git repository", nargs = "?") 
+parser.add_argument("--version", "-v", type = str, help = "The package version to be make or update") 
+parser.add_argument("--license", "-l", type = str, help = "The package license to be make or update") 
+parser.add_argument("--ci"     , "-c", type = str, help = "The package ci script to be make or update") 
+parser.add_argument("--demo"   , "-d", action='store_true', help = "To make demo folder and scons script") 
+
+# Create the log object
+def buildpkg_log(name): 
+    log = logging.getLogger("buildpkg") 
+    log.setLevel(logging.DEBUG)
+    format = logging.Formatter("[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s")
+
+    c = logging.StreamHandler()
+    f = logging.FileHandler(name + ".log")
+    c.setFormatter(format)
+    f.setFormatter(format)
+    c.setLevel(logging.INFO)
+    f.setLevel(logging.DEBUG)
+    log.addHandler(c) 
+    log.addHandler(f) 
+
+    return log
+
+# Instantiate the log object 
+log = buildpkg_log("buildpkg") 
 
 # add readme file
-def buildpkg_add_readme(template, name, version): 
-    readme_name = name + "/readme.md"
-    with open("template/" + template, 'r', encoding='utf-8') as file_in, open(readme_name, 'w+', encoding='utf-8') as file_out: 
+def buildpkg_make_readme(pkgname, version): 
+    log.info("make readme.md...") 
+    template_readme_path = os.path.join(config["template"]["readme"])
+    readme_path = os.path.join(config["output_path"], pkgname, "readme.md") 
+    
+    log.debug("find readme.md template: \"%s\"" % (template_readme_path)) 
+    
+    with open(template_readme_path, 'r', encoding='utf-8') as file_in, open(readme_path, 'w+', encoding='utf-8') as file_out: 
         textlist = file_in.readlines()
         for line in textlist: 
-            line = line.replace("[template_name]", name)
-            line = line.replace("[template_version]", version)
+            line = line.replace("{{name}}", pkgname)
+            line = line.replace("{{version}}", version)
             file_out.write(line)
-            # log.debug(line.rstrip())
-
-    log.info("%s pkg generate readme.md file success!" %(name)) 
+    log.info("make readme.md success...") 
 
 # add SConscript file
-def buildpkg_add_sconscript(template, name, version):
-    sconscript_name = name + "/SConscript"
-    with open("template/" + template, 'r', encoding='utf-8') as file_in, open(sconscript_name, 'w+', encoding='utf-8') as file_out: 
+def buildpkg_make_sconscript(pkgname, version): 
+    log.info("make SConscript...") 
+    template_sconscript_path = os.path.join(config["template"]["sconscript"])
+    sconscript_path = os.path.join(config["output_path"], pkgname, "SConscript") 
+
+    log.debug("find SConscript template: \"%s\"" % (template_sconscript_path)) 
+
+    with open(template_sconscript_path, 'r', encoding='utf-8') as file_in, open(sconscript_path, 'w+', encoding='utf-8') as file_out: 
         textlist = file_in.readlines()
         for line in textlist: 
-            line = line.replace("[template_name]", '"' + name + '"')
-            line = line.replace("[template_version]", '"' + version + '"')
-            line = line.replace("[template_date]", time.strftime("%Y-%m-%d", time.localtime()))
-            line = line.replace("[template_datetime]", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+            line = line.replace("{{name}}", pkgname)
+            line = line.replace("{{version}}", version)
+            line = line.replace("{{date}}", time.strftime("%Y-%m-%d", time.localtime()))
+            line = line.replace("{{datetime}}", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
             file_out.write(line)
-            # log.debug(line.rstrip())
-
-    log.info("%s pkg generate SConscript file success!" %(name)) 
-
-# add package license
-def buildpkg_add_license(name, license): 
-    log.info("%s pkg add %s license success!" %(name, license)) 
+    log.info("make SConscript success...") 
 
 # add git repository
-def buildpkg_add_repository(name, pkgrepo): 
-    os.chdir(name) 
+def buildpkg_make_repository(pkgname, pkgrepo): 
+    log.info("make git repository...") 
+    pwd = os.getcwd()
+    repository_path = os.path.join(config["output_path"], pkgname) 
+    os.chdir(repository_path) 
+
     os.system("git init") 
+    log.debug("Initialize the git repository") 
+
     os.system("git submodule add " + pkgrepo) 
-    os.chdir("./../") 
-    log.info("%s pkg add %s repo success!" %(name, pkgrepo)) 
+    log.debug("Add the \"%s\" git submodule" % (repository_path)) 
 
-# make base package 
-def buildpkg_make_base_package(name, pkgrepo, version, license, output): 
-    log.info("start make base package(name: %s, version: %s, license: %s, output: %s)..." % (name, version, license, output)) 
+    os.chdir(pwd) 
 
-    package_path = os.path.join(output, name)
+    log.info("make git repository success...") 
 
-    # check dir or file is exist
+# make package 
+def buildpkg_make_package(pkgname, pkgrepo, version, license, ci, demo): 
+    log.info("make package...") 
+    package_path = os.path.join(config["output_path"], pkgname) 
+
+    # check package directory is exist
     if os.path.exists(package_path) == True: 
-        old_package_path = package_path + "_old_" + time.strftime("%Y%m%d%H%M%S", time.localtime()) 
-        log.warning("%s dir or file already existed, backup to %s!" %(name, old_package_path))
-        os.rename(package_path, old_old_package_pathname)
+        package_path_backup = package_path + "_backup_" + time.strftime("%y%m%d_%H%M%S", time.localtime()) 
+        log.warning("\"%s\" already existed, backup to \"%s\"" %(package_path, package_path_backup))
+        os.rename(package_path, package_path_backup)
 
     # make package directory
-    os.mkdir(package_path)
-    log.info("%s pkg generate directory success!" % package_path) 
+    os.makedirs(package_path)
+    
+    log.info("\"%s\" make success!" % (package_path)) 
 
     # add SConscript file
     # add Readme.md file
     # init and add repository
-    buildpkg_add_readme(template_readme_name, name, version)
-    buildpkg_add_sconscript(template_sconscript_name, name, version)
+    buildpkg_make_readme    (pkgname, version if version != None else config["default_version"])
+    buildpkg_make_sconscript(pkgname, version if version != None else config["default_version"])
 
-    if license != "None": 
-        buildpkg_add_license(name, license) 
+    if pkgrepo != None: 
+        buildpkg_make_repository(pkgname, pkgrepo)
 
-    if pkgrepo != "None":
-        buildpkg_add_repository(name, pkgrepo) 
+    log.info("make package success...") 
 
+# main run 
 if __name__ == "__main__":
-    args = parser.parse_args() 
     log.info("start run buildpkg...") 
+    
+    args = parser.parse_args() 
     log.debug(args) 
 
-    # check cmd input para
-    if args.pkgrepo == "None": 
-        log.debug("No found pkgrepo parameter!") 
+    if args.action == "make": 
+        buildpkg_make_package(args.pkgname, args.pkgrepo, args.version, args.license, args.ci, args.demo)
+    elif args.action == "update": 
+        log.info("update package...") 
 
-    if args.version == "v1.0.0a": 
-        log.debug("No found version parameter, set version v1.0.0a!") 
-
-    if args.license == "None": 
-        log.debug("No found license parameter!") 
-
-    if args.output == "None": 
-        log.debug("No found output parameter, set output path './'!") 
-
-    # make package
-    buildpkg_make_base_package(args.pkgname, args.pkgrepo, args.version, args.license, args.output) 
+    log.info("To complete the building by buildpkg...\n") 
