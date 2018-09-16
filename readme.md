@@ -1,35 +1,64 @@
-## buildpkg for rt-thread 
+<div align="center">
+  <h1>buildpkg</h1>
 
-[![release](https://img.shields.io/badge/release-v0.1.0-orange.svg)]()
-[![buildpkg](https://img.shields.io/badge/build-pass-blue.svg)]()
+  <div>
+    <a href="https://github.com/rtpkgs/buildpkg">
+      <img src="https://img.shields.io/travis/liu2guang/Lua2RTT/master.svg?style=flat-square" alt="travis-ci" />
+    </a>
+    <a href="https://github.com/rtpkgs/buildpkg/stargazers">
+      <img src="https://img.shields.io/github/stars/rtpkgs/buildpkg.svg?style=flat-square" alt="stargazers" />
+    </a>
+  </div>
 
-工具测试
+  <div>
+    <a href="https://github.com/rtpkgs/buildpkg">
+      <img src="https://img.shields.io/github/downloads/rtpkgs/buildpkg/total.svg?style=flat-square" alt="downloads" />
+    </a>
+    <a href="https://github.com/rtpkgs/buildpkg/blob/master/LICENSE">
+        <img src="https://img.shields.io/github/license/rtpkgs/buildpkg.svg?style=flat-square" alt="license" />
+    </a>
+    <a href="https://github.com/rtpkgs/buildpkg/releases">
+      <img src="https://img.shields.io/github/release/rtpkgs/buildpkg.svg?style=flat-square" alt="Github All Releases" />
+    </a>
+  </div>
 
-### 1. 使用方法
-```cmd
-python .\buildpkg.py make cstring https://github.com/liu2guang/cstring.git --version=v1.0.0 --license=MIT --ci=github --demo
-python .\buildpkg.py update cstring --version=v1.1.0 --license=GPLv3 --ci=gitlab --demo
-```
+  <p>Quick build rt-thread pkg toolkits | 快速构建rt-thread pkg工具集</p>
+</div>
 
-### 2. 目前实现功能
+## 简介 ([English](/readme.en.md)) 
 
-| 序号 | 支持功能 | 备注 |
+buildpkg是用于生成RT-Thread package的快速构建工具.
+
+本项目重点关注package的快速生成和开源仓库的快速迁移, 为开发Rt-Thread的package的开发者提供便利. 如果您喜欢该项目觉得该项目不错的话, 请赏赐一个星星, 星星就是更新的动力! 
+
+| 序号  | 支持功能 | 描述 |
 | :--- | :--- | :--- |
-| 1 | 支持生成pkg模板+git仓库, 便于用户在此基础上添加自己的代码, 实现pkg的开发 | 自动生成scons脚本+git仓库+readme.md文件+首个commit提交 |
-| 2 | 支持通过指定git仓库快速生成pkg, 一般用于纯c项目、兼容RT-Thread支持标准(posix/libc/filesystem)的项目快速构建 | 1号功能+指定仓库的子模块 |
-| 3 | 支持日志生成, 便于调试和记录生成pkg的记录 | - |
-| 4 | 支持输出自动构建的pkg到指定目录中 | - | 
-| 5 | 支持开源协议文件的添加 | 开发中... | 
-| 6 | 支持github ci文件的生成 | 开发中... | 
-| 7 | 创建demo目录模板及其scons脚本 | 开发中... | 
-| 7 | 可配置的移除对于xxxx.c, 支持正则表达式 | 开发中... | 
+| 1 | 构建package | 创建指定名称package, 自动添加readme/版本号/github ci脚本/demo/开源协议文件 |
+| 2 | 迁移开源仓库 | 从指定git仓库构建package, 自动添加readme/版本号/github ci脚本/demo/开源协议文件, 但是迁移的仓库需要用户自己按照实际情况修改, 对于纯软件仓库且兼容RT-Thread支持标准可以无需修改 |
+| 3 | 更新package | 生成package后修复部分错误信息 |
 
-### 2. 设计功能
+## 安装步骤
+> pip install lice
 
-功能设计目前不完善, 大家可以提提自己的想法. 以下为待完成功能: 
+## 使用方法
 
-![待实现功能](https://i.imgur.com/gKehWKr.png) 
+### 1. 构建package
+> python .\buildpkg.py make mypkg --version=v1.0.0 --license=MIT --ci=github --demo
 
-总体功能设计图: 
+### 2. 迁移开源仓库
+> python .\buildpkg.py make cstring https://github.com/liu2guang/cstring.git --version=v1.0.0 --license=MIT --ci=github --demo
 
-![全部功能](https://i.imgur.com/iGmWMQ1.png)
+### 3. 更新package
+> python .\buildpkg.py update cstring --version=v1.1.0 --license=GPLv3 --ci=gitlab --demo
+
+## 测试平台
+
+## 联系人
+
+* 邮箱：[1004383796@qq.com](mailto:1004383796@qq.com)
+* 主页：[liu2guang](https://github.com/liu2guang)
+* 仓库：[Github](https://github.com/liu2guang), [Gitee](https://github.com/liu2guang) 
+
+## 感谢
+
+这个项目的存在要感谢以下开发者 [contributed](CONTRIBUTING.md). 
