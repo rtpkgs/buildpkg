@@ -1,7 +1,7 @@
 <div align="center">
   <h1>buildpkg</h1>
 
-  <div>
+  <div align="center">
     <a href="https://github.com/rtpkgs/buildpkg">
       <img src="https://img.shields.io/travis/liu2guang/Lua2RTT/master.svg?style=flat-square" alt="travis-ci" />
     </a>
@@ -10,7 +10,7 @@
     </a>
   </div>
 
-  <div>
+  <div align="center">
     <a href="https://github.com/rtpkgs/buildpkg">
       <img src="https://img.shields.io/github/downloads/rtpkgs/buildpkg/total.svg?style=flat-square" alt="downloads" />
     </a>
@@ -22,7 +22,7 @@
     </a>
   </div>
 
-  <p>Quick build rt-thread pkg toolkits | 快速构建rt-thread pkg工具集</p>
+  <p align="center">Quick build rt-thread pkg toolkits | 快速构建rt-thread pkg工具集</p>
 </div>
 
 ## 简介 ([English](/readme.en.md)) 
