@@ -67,12 +67,20 @@ def buildpkg_add_readme(pkgname, version):
     
     log.debug("find readme.md template: \"%s\"" % (template_readme_path)) 
     
-    with open(template_readme_path, 'r', encoding='utf-8') as file_in, open(readme_path, 'w+', encoding='utf-8') as file_out: 
-        textlist = file_in.readlines()
-        for line in textlist: 
-            line = line.replace("{{name}}", pkgname)
-            line = line.replace("{{version}}", version)
-            file_out.write(line)
+    if sys.version_info < (3, 0):
+        with open(template_readme_path, 'r') as file_in, open(readme_path, 'w+') as file_out: 
+            textlist = file_in.readlines()
+            for line in textlist: 
+                line = line.replace("{{name}}", pkgname)
+                line = line.replace("{{version}}", version)
+                file_out.write(line)
+    else: 
+        with open(template_readme_path, 'r', encoding='utf-8') as file_in, open(readme_path, 'w+', encoding='utf-8') as file_out: 
+            textlist = file_in.readlines()
+            for line in textlist: 
+                line = line.replace("{{name}}", pkgname)
+                line = line.replace("{{version}}", version)
+                file_out.write(line)
     log.info("add readme.md success...") 
 
 # add SConscript file
@@ -83,14 +91,24 @@ def buildpkg_add_sconscript(pkgname, version):
 
     log.debug("find SConscript template: \"%s\"" % (template_sconscript_path)) 
 
-    with open(template_sconscript_path, 'r', encoding='utf-8') as file_in, open(sconscript_path, 'w+', encoding='utf-8') as file_out: 
-        textlist = file_in.readlines()
-        for line in textlist: 
-            line = line.replace("{{name}}", pkgname)
-            line = line.replace("{{version}}", version)
-            line = line.replace("{{date}}", time.strftime("%Y-%m-%d", time.localtime()))
-            line = line.replace("{{datetime}}", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-            file_out.write(line)
+    if sys.version_info < (3, 0):
+        with open(template_sconscript_path, 'r') as file_in, open(sconscript_path, 'w+') as file_out: 
+            textlist = file_in.readlines()
+            for line in textlist: 
+                line = line.replace("{{name}}", pkgname)
+                line = line.replace("{{version}}", version)
+                line = line.replace("{{date}}", time.strftime("%Y-%m-%d", time.localtime()))
+                line = line.replace("{{datetime}}", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                file_out.write(line)
+    else: 
+        with open(template_sconscript_path, 'r', encoding='utf-8') as file_in, open(sconscript_path, 'w+', encoding='utf-8') as file_out: 
+            textlist = file_in.readlines()
+            for line in textlist: 
+                line = line.replace("{{name}}", pkgname)
+                line = line.replace("{{version}}", version)
+                line = line.replace("{{date}}", time.strftime("%Y-%m-%d", time.localtime()))
+                line = line.replace("{{datetime}}", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                file_out.write(line)
     log.info("add SConscript success...") 
 
 # add git repository
