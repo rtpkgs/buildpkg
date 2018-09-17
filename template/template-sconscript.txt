@@ -19,8 +19,8 @@ cwd = GetCurrentDir()
 src = []
 inc = []
 
-name    = {{name}}
-version = {{version}}
+name    = "{{name}}"
+version = "{{version}}"
 
 # print debug info
 # print(name + '-' + version)
