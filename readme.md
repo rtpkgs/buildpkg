@@ -38,7 +38,7 @@ buildpkg是用于生成RT-Thread package的快速构建工具.
 | 3 | 更新package | 生成package后修复部分错误信息 |
 
 ## 安装步骤
-> pip install lice
+> pip install lice 或者 easy_install lice
 
 ## 使用方法
 

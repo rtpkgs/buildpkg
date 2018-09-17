@@ -28,6 +28,8 @@ config = {
     "commit_content": "Use the buildpkg tool to quickly build {{name}}'s packages!"
 }
 
+buildpkg_version = "v0.2.0_alpha" 
+
 # buildpkg cmd
 parser = argparse.ArgumentParser(
     description = "Quick build rt-thread pkg toolkits")
@@ -35,7 +37,7 @@ parser.add_argument(  "action" ,       type = str, help = "The action of build p
 parser.add_argument(  "pkgname",       type = str, help = "The package name to be make or update") 
 parser.add_argument(  "pkgrepo",       type = str, help = "To make the package from the specified git repository", nargs = "?") 
 parser.add_argument("--version", "-v", type = str, help = "The package version to be make or update") 
-parser.add_argument("--license", "-l", type = str, help = "The package license to be make or update") 
+parser.add_argument("--license", "-l", type = str, help = "The package license to be make or update, one of: agpl3, apache, bsd2, bsd3, cddl, cc0, epl, gpl2, gpl3, lgpl, mit, mpl") 
 parser.add_argument("--ci"     , "-c", type = str, help = "The package ci script to be make or update") 
 parser.add_argument("--demo"   , "-d", action='store_true', help = "To make demo folder and scons script") 
 
@@ -128,6 +130,19 @@ def buildpkg_add_repository(pkgname, pkgrepo):
 
     log.info("add git repository success...") 
 
+# add package license 
+def buildpkg_add_license(pkgname, license):
+    log.info("add package %s license..." % (license)) 
+    pwd = os.getcwd()
+    repository_path = os.path.join(config["output_path"], pkgname) 
+    os.chdir(repository_path) 
+
+    cmd = "lice " + license.lower() + " -f license"
+    os.system(cmd) 
+
+    os.chdir(pwd) 
+    log.info("add package license success...") 
+
 # make package 
 def buildpkg_make_package(pkgname, pkgrepo, version, license, ci, demo): 
     log.info("create package...") 
@@ -149,6 +164,9 @@ def buildpkg_make_package(pkgname, pkgrepo, version, license, ci, demo):
     # init and add repository
     buildpkg_add_readme    (pkgname, version if version != None else config["default_version"])
     buildpkg_add_sconscript(pkgname, version if version != None else config["default_version"])
+
+    if license != None: 
+        buildpkg_add_license(pkgname, license) 
 
     if pkgrepo != None: 
         buildpkg_add_repository(pkgname, pkgrepo)
@@ -177,6 +195,7 @@ def buildpkg_add_commit(pkgname):
 # main run 
 if __name__ == "__main__":
     log.info("start run buildpkg...") 
+    log.info("current buildpkg version %s" % (buildpkg_version)) 
     
     args = parser.parse_args() 
     log.debug(args) 
