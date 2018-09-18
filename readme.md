@@ -53,6 +53,15 @@ buildpkg是用于生成RT-Thread package的快速构建工具.
 
 ## 测试平台
 
+| 序号 | 测试平台 | 测试结果 | 
+|:---|:---|:---|
+| 1 | python27+win10 | 测试通过 |
+| 2 | python37+win10 | 中文名许可证生成错误 | 
+| 3 | python27+win7  | 待测试 |
+| 4 | python37+win7  | 待测试 |
+| 5 | python27+mac   | 路径不兼容导致错误 |
+| 6 | python37+mac   | 路径不兼容导致错误 |
+
 ## 联系人
 
 * 邮箱：[1004383796@qq.com](mailto:1004383796@qq.com)
