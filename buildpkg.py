@@ -33,13 +33,14 @@ buildpkg_version = "v0.2.0_alpha"
 # buildpkg cmd
 parser = argparse.ArgumentParser(
     description = "Quick build rt-thread pkg toolkits")
-parser.add_argument(  "action" ,       type = str, help = "The action of build package by buildpkg", choices=["make", "update"]) 
-parser.add_argument(  "pkgname",       type = str, help = "The package name to be make or update") 
-parser.add_argument(  "pkgrepo",       type = str, help = "To make the package from the specified git repository", nargs = "?") 
-parser.add_argument("--version", "-v", type = str, help = "The package version to be make or update") 
-parser.add_argument("--license", "-l", type = str, help = "The package license to be make or update, one of: agpl3, apache, bsd2, bsd3, cddl, cc0, epl, gpl2, gpl3, lgpl, mit, mpl") 
-parser.add_argument("--ci"     , "-c", type = str, help = "The package ci script to be make or update") 
-parser.add_argument("--demo"   , "-d", action='store_true', help = "To make demo folder and scons script") 
+parser.add_argument(  "action"   ,       type = str, help = "The action of build package by buildpkg", choices=["make", "update"]) 
+parser.add_argument(  "pkgname"  ,       type = str, help = "The package name to be make or update") 
+parser.add_argument(  "pkgrepo"  ,       type = str, help = "To make the package from the specified git repository", nargs = "?") 
+parser.add_argument("--submodule", "-s", action='store_true', help = "Add the repository as a submodule")
+parser.add_argument("--version"  , "-v", type = str, help = "The package version to be make or update") 
+parser.add_argument("--license"  , "-l", type = str, help = "The package license to be make or update, one of: agpl3, apache, bsd2, bsd3, cddl, cc0, epl, gpl2, gpl3, lgpl, mit, mpl") 
+parser.add_argument("--ci"       , "-c", type = str, help = "The package ci script to be make or update") 
+parser.add_argument("--demo"     , "-d", action='store_true', help = "To make demo folder and scons script") 
 
 # Create the log object
 def buildpkg_log(name): 
@@ -114,7 +115,7 @@ def buildpkg_add_sconscript(pkgname, version):
     log.info("add SConscript success...") 
 
 # add git repository
-def buildpkg_add_repository(pkgname, pkgrepo): 
+def buildpkg_add_repository(pkgname, pkgrepo, submodule): 
     log.info("add git repository...") 
     pwd = os.getcwd()
     repository_path = os.path.join(config["output_path"], pkgname) 
@@ -123,8 +124,23 @@ def buildpkg_add_repository(pkgname, pkgrepo):
     os.system("git init") 
     log.debug("Initialize the git repository success") 
 
-    os.system("git submodule add " + pkgrepo) 
-    log.debug("Add the \"%s\" git submodule" % (repository_path)) 
+    if submodule == False: 
+        os.system('git clone --progress --recursive ' + pkgrepo + " " + pkgname) 
+        os.chdir(pkgname) 
+        git_removepath = os.path.join(os.getcwd(), '.git') 
+        if platform.system() == 'Windows':
+            print("Windows platform") 
+            os.system('attrib -r ' + git_removepath + '\\*.* /s') # 递归修改windows下面的只读文件为可读属性
+        elif platform.system() == 'Linux': 
+            print("Linux platform") # Todo
+        else:
+            print("Other platform") # Todo
+
+        shutil.rmtree(git_removepath) 
+        log.debug("Add the \"%s\" repository code" % (repository_path)) 
+    else: 
+        os.system("git submodule add " + pkgrepo) 
+        log.debug("Add the \"%s\" git submodule" % (repository_path)) 
 
     os.chdir(pwd) 
 
@@ -143,8 +159,14 @@ def buildpkg_add_license(pkgname, license):
     os.chdir(pwd) 
     log.info("add package license success...") 
 
+# add package demo 
+def buildpkg_add_demo(pkgname, pkgrepo, version):
+    log.info("add package demo..." % (license)) 
+
+    log.info("add package demo success...") 
+
 # make package 
-def buildpkg_make_package(pkgname, pkgrepo, version, license, ci, demo): 
+def buildpkg_make_package(pkgname, pkgrepo, submodule, version, license, ci, demo): 
     log.info("create package...") 
     package_path = os.path.join(config["output_path"], pkgname) 
 
@@ -169,7 +191,7 @@ def buildpkg_make_package(pkgname, pkgrepo, version, license, ci, demo):
         buildpkg_add_license(pkgname, license) 
 
     if pkgrepo != None: 
-        buildpkg_add_repository(pkgname, pkgrepo)
+        buildpkg_add_repository(pkgname, pkgrepo, submodule)
 
     log.info("create package success...") 
 
@@ -192,6 +214,17 @@ def buildpkg_add_commit(pkgname):
     os.chdir(pwd) 
     log.info("add first commit success...") 
 
+# add the build info
+def buildpkg_output_info(args): 
+    log.info("> Package: %s" % (args.pkgname)) 
+    log.info("> Version: %s" % (args.version if args.version != None else config["default_version"])) 
+
+    if args.pkgrepo != None:
+        log.info("> Git: %s" % (args.pkgrepo)) 
+
+    if args.license != None:
+        log.info("> License: %s" % (args.license)) 
+
 # main run 
 if __name__ == "__main__":
     log.info("start run buildpkg...") 
@@ -201,10 +234,11 @@ if __name__ == "__main__":
     log.debug(args) 
 
     if args.action == "make": 
-        buildpkg_make_package(args.pkgname, args.pkgrepo, args.version, args.license, args.ci, args.demo)
+        buildpkg_make_package(args.pkgname, args.pkgrepo, args.submodule, args.version, args.license, args.ci, args.demo)
     elif args.action == "update": 
         log.info("update package...") 
 
     buildpkg_add_commit(args.pkgname)
 
+    buildpkg_output_info(args)
     log.info("To complete the building by buildpkg...\n") 
