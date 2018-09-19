@@ -1,14 +1,3 @@
-# 
-# @File:   SConscript 
-# @Author: buildpkg.py 
-# @Date:   {{datetime}}
-#
-# @LICENSE: {{license}}.
-#
-# Change Logs:
-# Date           Author       Notes
-# {{date}}     buildpkg.py  Generate the scons script automatically.
-
 import os
 from building import * 
 
@@ -18,13 +7,6 @@ cwd = GetCurrentDir()
 # init src and inc vars
 src = []
 inc = []
-
-name    = "{{name}}"
-version = "{{version}}"
-
-# print debug info
-# print(name + '-' + version)
-# print('PKG_USING_' + name.upper()) 
 
 # add to project 
 def make_pkg(f):
@@ -46,11 +28,11 @@ def make_pkg(f):
 make_pkg(cwd) 
 
 # add group to IDE project
-objs = DefineGroup(name + '-' + version, src, depend = ['PKG_USING_' + name.upper()], CPPPATH = inc)
+objs = DefineGroup('{{pkgname}}-{{version}}', src, depend = ['PKG_USING_{{pkgname_letter}}'], CPPPATH = inc)
 
 # traversal subscript
 list = os.listdir(cwd)
-if GetDepend('PKG_USING_' + name.upper()):
+if GetDepend(['PKG_USING_{{pkgname_letter}}']):
     for d in list:
         path = os.path.join(cwd, d)
         if os.path.isfile(os.path.join(path, 'SConscript')):
