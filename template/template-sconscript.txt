@@ -26,11 +26,12 @@ print(src)
 # Remove ignore src and 
 list_ignore_inc = []
 list_ignore_src = []
-list_ignore_inc += {{list_ignore_inc}}
-list_ignore_src += {{list_ignore_src}}
 
-print(list_ignore_inc)
-print(list_ignore_src)
+# --------------------------------------------------------------------------------
+#  user add ignore: 
+# --------------------------------------------------------------------------------
+list_ignore_inc += {{list_ignore_inc}} 
+list_ignore_src += {{list_ignore_src}} 
 
 print(list_ignore_inc)
 print(list_ignore_src)
@@ -42,16 +43,13 @@ def traverse_package(f):
         tmp_path = os.path.join(f, f1) 
         filename = os.path.basename(tmp_path)
 
-        # dir
-        if os.path.isdir(tmp_path): 
+        if os.path.isdir(tmp_path): # dir
             if not filename in list_ignore_inc: 
                 print("DIR: " + filename)
+                inc.append(f)
                 traverse_package(tmp_path)
-
-        # file
-        else: 
+        else: # file
             suffix = os.path.splitext(tmp_path)[1]
-
             if suffix   == '.c' and not filename in list_ignore_src:
                 #print("FILE: " + filename)
                 src.append(tmp_path)

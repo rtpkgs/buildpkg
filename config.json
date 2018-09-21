@@ -11,9 +11,9 @@
     },
     "commit_content": "[AutoBuild] Use the buildpkg tool to quickly build {{pkgname}}'s packages!", 
     "list_ignore_inc": [
-        ".git", "example"
+        ".git", "example", "doc", "test"
     ], 
     "list_ignore_src": [
-        "test.c"
+        "test.c", "example.c"
     ]
 }

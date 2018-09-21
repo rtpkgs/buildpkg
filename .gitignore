@@ -1,2 +1,5 @@
 /packages
 /*.log
+/__pycache__
+/build
+/dist
