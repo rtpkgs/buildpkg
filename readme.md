@@ -35,7 +35,7 @@ buildpkg是用于生成RT-Thread package的快速构建工具.
 | :--- | :--- | :--- |
 | 1 | 构建package | 创建指定名称package, 自动添加readme/版本号/github ci脚本/demo/开源协议文件 |
 | 2 | 迁移开源仓库 | 从指定git仓库构建package, 自动添加readme/版本号/github ci脚本/demo/开源协议文件, 但是迁移的仓库需要用户自己按照实际情况修改, 对于纯软件仓库且兼容RT-Thread支持标准可以无需修改 |
-| 3 | 更新package | 生成package后修复部分错误信息 |
+| 3 | 更新package | 生成package后修复部分错误信息 | 
 
 ## 安装步骤
 > pip install lice 或者 easy_install lice

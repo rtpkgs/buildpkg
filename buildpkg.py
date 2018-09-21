@@ -30,7 +30,7 @@ def _buildpkg_run_log(file):
     f = logging.FileHandler(file)
     c.setFormatter(format)
     f.setFormatter(format)
-    c.setLevel(logging.DEBUG)
+    c.setLevel(logging.DEBUG) # INFO
     f.setLevel(logging.DEBUG)
     log.addHandler(c) 
     log.addHandler(f) 
@@ -54,12 +54,6 @@ def _buildpkg_pkg_log(file):
 run_log = _buildpkg_run_log("buildpkg.log") 
 pkg_log = _buildpkg_pkg_log("packages/pkglist.log") # Todo 
 
-# Load buildpkg config 
-# Todo: try
-with open("config.json", 'r') as f:
-    _config = json.load(f)
-    run_log.debug("Read config: \n" + json.dumps(_config, indent=4)) 
-
 # buildpkg cmd
 parser = argparse.ArgumentParser(
     description = "Quick build rt-thread pkg toolkits")
@@ -69,6 +63,12 @@ parser.add_argument(  "pkgrepo"  ,        type = str, help = "To make the packag
 parser.add_argument("--version"  , "-v" , type = str, help = "The package version to be make or update") 
 parser.add_argument("--license"  , "-l" , type = str, help = "The package license to be make or update, one of: agpl3, apache, bsd2, bsd3, cddl, cc0, epl, gpl2, gpl3, lgpl, mit, mpl") 
 parser.add_argument("--remove-submodule", action='store_true', help = "Remove the submodule of repository")
+
+# Load buildpkg config 
+# Todo: try
+with open("config.json", 'r') as f:
+    _config = json.load(f)
+    run_log.debug("Read config: \n" + json.dumps(_config, indent=4)) 
 
 # generate file
 def _buildpkg_generate_file(template_name, pkgname, target_path, replace_list): 
@@ -137,16 +137,14 @@ def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["de
     os.makedirs(package_path) 
     run_log.info("\"%s\" directory create success!" % (package_path)) 
 
-    # 必须添加的: 
-    # 5. 迁移时将仓库做成子模块
-    # 6. 添加.git仓库, 添加第一个提交
-    
-    # 可选的: 
-    # 1. 移除子模块修改成源码方式
     username = _config["username"]
 
     # 1. add readme.md 
-    replace_list = {"username": username, "pkgname": package_name, "version": version}
+    replace_list = {
+        "username": username, 
+        "pkgname": package_name, 
+        "version": version
+        }
     _buildpkg_generate_file("readme", package_name, "readme.md", replace_list) 
 
     # 2. add demo dir and xxx_demo.c + SConscript
@@ -155,15 +153,28 @@ def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["de
     os.makedirs(example_path) 
     with open(example_demo_c_path, "a+") as fp: 
         pass
-    replace_list = {"pkgname": package_name, "version": version, "pkgname_letter": package_name.upper()}
+    replace_list = {
+        "pkgname": package_name, 
+        "version": version, 
+        "pkgname_letter": package_name.upper()
+        }
     _buildpkg_generate_file("sconscript-example", package_name, os.path.join("example", "SConscript"), replace_list) 
 
     # 3. add SConscript 
-    replace_list = {"pkgname": package_name, "version": version, "pkgname_letter": package_name.upper()}
+    replace_list = {
+        "pkgname": package_name, 
+        "version": version, 
+        "pkgname_letter": package_name.upper(), 
+        "list_ignore_inc": str(_config["list_ignore_inc"]), 
+        "list_ignore_src": str(_config["list_ignore_src"])
+        }
     _buildpkg_generate_file("sconscript", package_name, "SConscript", replace_list) 
 
     # 4. add github ci and copy 'template/bsp_script/' to 'pkg/scripts'
-    replace_list = {"username": username, "pkgname": package_name} 
+    replace_list = {
+        "username": username, 
+        "pkgname": package_name
+        } 
     _buildpkg_generate_file("github-ci", package_name, ".travis.yml", replace_list) 
     shutil.copytree(os.path.join("template", "bsp_script"), os.path.join("packages", package_name, "scripts"))
 
@@ -220,7 +231,7 @@ def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["de
     run_log.info("commit the first commit success.") 
 
     # 8. add pkg list log
-    pkg_log.info("build %s package success." % (package_name))
+    pkg_log.info("build package success: '%s'." % (package_name))
 
 if __name__ == "__main__":
     run_log.info("Start run buildpkg") 

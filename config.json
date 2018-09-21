@@ -9,5 +9,11 @@
         "sconscript": "template-sconscript.txt", 
         "sconscript-example": "template-sconscript-example.txt"
     },
-    "commit_content": "[AutoBuild] Use the buildpkg tool to quickly build {{pkgname}}'s packages!"
+    "commit_content": "[AutoBuild] Use the buildpkg tool to quickly build {{pkgname}}'s packages!", 
+    "list_ignore_inc": [
+        ".git", "example"
+    ], 
+    "list_ignore_src": [
+        "test.c"
+    ]
 }

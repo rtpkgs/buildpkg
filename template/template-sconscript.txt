@@ -1,36 +1,69 @@
+# -*- coding:utf-8 –*-
+# @File:   Sconscript
+# @Author: buildpkg.exe
+# @Date:   2018-09-19 18:07:00(The date the template was created)
+#
+# @LICENSE: https://github.com/rtpkgs/buildpkg/blob/master/LICENSE.
+#
+# Change Logs:
+# Date           Author         Notes 
+# 20xx-xx-xx     buildpkg.exe   auto create by buildpkg.exe. 
+
 import os
 from building import * 
 
-# get current dir path
+# Get current dir path
 cwd = GetCurrentDir()
 
-# init src and inc vars
+# Init inc_list and src_list vars
+inc = [] 
 src = []
-inc = []
 
-# add to project 
-def make_pkg(f):
-    fs = os.listdir(f)
-    for f1 in fs:
-        tmp_path = os.path.join(f, f1)
+# debug info
+print(inc)
+print(src)
 
-        if os.path.isdir(tmp_path):
-            make_pkg(tmp_path)
+# Remove ignore src and 
+list_ignore_inc = []
+list_ignore_src = []
+list_ignore_inc += {{list_ignore_inc}}
+list_ignore_src += {{list_ignore_src}}
 
+print(list_ignore_inc)
+print(list_ignore_src)
+
+print(list_ignore_inc)
+print(list_ignore_src)
+
+# Traverse package, add code and path to project 
+def traverse_package(f):
+    fs = os.listdir(f) 
+    for f1 in fs: 
+        tmp_path = os.path.join(f, f1) 
+        filename = os.path.basename(tmp_path)
+
+        # dir
+        if os.path.isdir(tmp_path): 
+            if not filename in list_ignore_inc: 
+                print("DIR: " + filename)
+                traverse_package(tmp_path)
+
+        # file
         else: 
             suffix = os.path.splitext(tmp_path)[1]
 
-            if suffix   == '.c':
+            if suffix   == '.c' and not filename in list_ignore_src:
+                #print("FILE: " + filename)
                 src.append(tmp_path)
             elif suffix == '.h':
                 inc.append(f)
             
-make_pkg(cwd) 
+traverse_package(cwd) 
 
-# add group to IDE project
+# Add group to IDE project
 objs = DefineGroup('{{pkgname}}-{{version}}', src, depend = ['PKG_USING_{{pkgname_letter}}'], CPPPATH = inc)
 
-# traversal subscript
+# Traversal subscript
 list = os.listdir(cwd)
 if GetDepend(['PKG_USING_{{pkgname_letter}}']):
     for d in list:
