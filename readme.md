@@ -43,24 +43,22 @@ buildpkg是用于生成RT-Thread package的快速构建工具.
 ## 使用方法
 
 ### 1. 构建package
-> python .\buildpkg.py make mypkg --version=v1.0.0 --license=MIT --ci=github --demo
+> python .\buildpkg.py make mypkg --version=v1.0.0 --license=MIT 
 
 ### 2. 迁移开源仓库
-> python .\buildpkg.py make cstring https://github.com/liu2guang/cstring.git --version=v1.0.0 --license=MIT --ci=github --demo
+> python .\buildpkg.py make cstring https://github.com/liu2guang/cstring.git --version=v1.0.0 --license=MIT 
 
 ### 3. 更新package
-> python .\buildpkg.py update cstring --version=v1.1.0 --license=GPLv3 --ci=gitlab --demo
+> python .\buildpkg.py update cstring --version=v1.1.0 --license=GPLv3(实现中...)
 
 ## 测试平台
 
 | 序号 | 测试平台 | 测试结果 | 
 |:---|:---|:---|
-| 1 | python27+win10 | 测试通过 |
-| 2 | python37+win10 | 中文名许可证生成错误 | 
-| 3 | python27+win7  | 待测试 |
-| 4 | python37+win7  | 待测试 |
-| 5 | python27+mac   | 路径不兼容导致错误 |
-| 6 | python37+mac   | 路径不兼容导致错误 |
+| 1 | win10   | exe测试通过 |
+| 2 | win7    | 待测试 | 
+| 3 | mac     | py脚本不知道是否兼容, 没有测试条件, 后面维护下 |
+| 4 | ubuntu  | py脚本不知道是否兼容, 没有测试条件, 后面维护下 |
 
 ## 联系人
 
