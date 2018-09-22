@@ -42,14 +42,16 @@ buildpkg是用于生成RT-Thread package的快速构建工具.
 
 ## 使用方法
 
+> 使用者请直接使用buildpkg.exe, 运行python脚本不保证兼容所有版本所有平台. 
+
 ### 1. 构建package
-> python .\buildpkg.py make mypkg --version=v1.0.0 --license=MIT 
+> .\buildpkg.exe make mypkg --version=v1.0.0 --license=MIT 
 
 ### 2. 迁移开源仓库
-> python .\buildpkg.py make cstring https://github.com/liu2guang/cstring.git --version=v1.0.0 --license=MIT 
+> .\buildpkg.exe make cstring https://github.com/liu2guang/cstring.git --version=v1.0.0 --license=MIT 
 
 ### 3. 更新package
-> python .\buildpkg.py update cstring --version=v1.1.0 --license=GPLv3(实现中...)
+> .\buildpkg.exe update cstring --version=v1.1.0 --license=GPLv3(实现中...)
 
 ## 测试平台
 
