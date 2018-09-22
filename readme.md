@@ -69,4 +69,12 @@ buildpkg是用于生成RT-Thread package的快速构建工具.
 
 ## 感谢
 
-这个项目的存在要感谢以下开发者 [contributed](CONTRIBUTING.md). 
+感谢以下开发者的大力支持: [contributed](CONTRIBUTING.md)
+<div>
+    <a href="https://github.com/rtpkgs/buildpkg">
+      <img width="50" heigth="50" src="https://avatars2.githubusercontent.com/u/24929334?s=400&u=da62f43f6c4ff722b9b9defb704f2c585536347e&v=4">
+    </a>
+    <a href="https://github.com/rtpkgs/buildpkg">
+      <img width="50" heigth="50" src="https://avatars2.githubusercontent.com/u/30776697?s=400&v=4">
+    </a>
+</div>
