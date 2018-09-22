@@ -1,6 +1,6 @@
 {
     "username": "liu2guang", 
-    "default_version": "v1.0.0",
+    "pkg_def_version": "v1.0.0",
     "template": {
         "github-ci": "template-github-ci.txt",
         "kconfig": "template-kconfig.txt",

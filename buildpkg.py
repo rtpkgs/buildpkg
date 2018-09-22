@@ -1,14 +1,17 @@
-# -*- coding:utf-8 –*-
+# -*- coding:utf-8 –*- 
 # @File:   buildpkg.py 
 # @Author: liu2guang
 # @Date:   2018-09-19 18:07:00
 #
-# @LICENSE: https://github.com/rtpkgs/buildpkg/blob/master/LICENSE.
+# @LICENSE: GPLv3: https://github.com/rtpkgs/buildpkg/blob/master/LICENSE.
 #
 # Change Logs:
 # Date           Author       Notes 
 # 2018-09-19     liu2guang    The first version. 
 
+# --------------------------------------------------------------------------------
+# import module 
+# --------------------------------------------------------------------------------
 import os, sys 
 import logging
 import json
@@ -17,10 +20,34 @@ import time
 import shutil 
 import platform
 
-_BUILDPKG_VERSION    = "v0.2.0_alpha"
-_BUILDPKG_LOG_FORMAT = "[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s"
+# --------------------------------------------------------------------------------
+# @ 发布信息 
+# @ Todo: 
+#     1. 实现发布和调试配置的功能, 方便以后开发. 
+# --------------------------------------------------------------------------------
+_BUILDPKG_VERSION = "v0.2.0" 
+_BUILDPKG_AUTHOR  = "liu2guang" 
+_BUILDPKG_LICENSE = "GPLv3" 
+_BUILDPKG_RELEASE = False
 
-# run logger
+# --------------------------------------------------------------------------------
+# @ 创建运行日志和Package生成日志
+# @ Note: 
+#     1. 运行日志是存储在"buildpkg.log"文件中. 
+#     2. Package构建信息日志是存储在"packages/pkglist.log"中, INFO等级. 
+#     3. 发布时run log写入文件中等级需要是最低的, 控制台的等级需要是INFO. 
+# 
+# @ Todo: 
+#     1. 优化日志打印格式.  
+#     2. 实现捕获所有异常这样日志才有作用, 还有就是邮箱发送日志? 
+#     3. 优雅的实现这部分代码, 感觉很奇怪说不上来. 
+# --------------------------------------------------------------------------------
+_BUILDPKG_LOG_FORMAT = "[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s" 
+
+# check packgae directory is exist
+if os.path.exists("packages") == False: 
+    os.makedirs("packages") 
+
 def _buildpkg_run_log(file): 
     log = logging.getLogger("buildpkg") 
     log.setLevel(logging.DEBUG)
@@ -30,14 +57,13 @@ def _buildpkg_run_log(file):
     f = logging.FileHandler(file)
     c.setFormatter(format)
     f.setFormatter(format)
-    c.setLevel(logging.DEBUG) # INFO
+    c.setLevel(logging.DEBUG) 
     f.setLevel(logging.DEBUG)
     log.addHandler(c) 
     log.addHandler(f) 
 
     return log
 
-# pkg logger
 def _buildpkg_pkg_log(file): 
     log = logging.getLogger("pkglist") 
     log.setLevel(logging.DEBUG)
@@ -50,11 +76,29 @@ def _buildpkg_pkg_log(file):
 
     return log
 
-# Init log 
 run_log = _buildpkg_run_log("buildpkg.log") 
-pkg_log = _buildpkg_pkg_log("packages/pkglist.log") # Todo 
+pkg_log = _buildpkg_pkg_log("packages/pkglist.log") 
 
-# buildpkg cmd
+# --------------------------------------------------------------------------------
+# @ 命令配置
+# @ Note: 
+#     1. action: 
+#           1. make: 构建或者迁移仓库, 可以构建空仓库, 也可以迁移开源的仓库. 
+#           2. update: 更新readme, 版本号, scons脚本. 
+#     2. pkgname: 构建或者迁移仓库时的生成的本地仓库的名称, 迁移仓库时可以不指定pkgname, 
+#                 会自动从git地址去获取名称.
+#     3. pkgrepo: 迁移仓库时的git地址. 
+#     4. version: 构建或者迁移仓库时指定版本, 可选配置, 没有配置时默认为v1.0.0, 默认配置
+#                 可以在"config.json"中的"pkg_def_version"进行修改配置. 
+#     5. license: 构建或者迁移仓库时指定许可证, 支持的许可证类型有以下种类: 
+#                 agpl3, apache, bsd2, bsd3, cddl, cc0, epl, gpl2, gpl3, lgpl, mit, mpl
+#                 没有指定许可证时默认不添加许可证. 
+# 
+# @ Todo: 
+#     1. 关于make同时构建或者迁移是否可以分为2个指令, create/transplant?. 
+#     2. 实现捕获所有异常这样日志才有作用, 还有就是邮箱发送日志? 
+#     3. 优雅的实现这部分代码, 感觉很奇怪说不上来. 
+# --------------------------------------------------------------------------------
 parser = argparse.ArgumentParser(
     description = "Quick build rt-thread pkg toolkits")
 parser.add_argument(  "action"   ,        type = str, help = "The action of build package by buildpkg", choices=["make", "update"]) 
@@ -98,11 +142,11 @@ def _buildpkg_generate_file(template_name, pkgname, target_path, replace_list):
     run_log.info("Add %s file success." % (target_path)) 
 
 # buildpkg cmd
-def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["default_version"], license = None, remove_submodule = False): 
+def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["pkg_def_version"], license = None, remove_submodule = False): 
     base_repo_flag = False
 
     if version == None: 
-        version = _config["default_version"]
+        version = _config["pkg_def_version"]
 
     if pkgname == None and pkgrepo == None: 
         run_log.error("Please input pkgname or pkgrepo while you make package!") 
@@ -128,7 +172,7 @@ def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["de
 
     package_path = os.path.join("packages", package_name) 
 
-    # check package directory is exist 
+    # check package/pkgname directory is exist 
     if os.path.exists(package_path) == True: 
         package_path_backup = package_path + "_backup_" + time.strftime("%y%m%d_%H%M%S", time.localtime()) 
         run_log.warning("\"%s\" already existed, backup to \"%s\"" %(package_path, package_path_backup))
@@ -147,11 +191,11 @@ def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["de
         }
     _buildpkg_generate_file("readme", package_name, "readme.md", replace_list) 
 
-    # 2. add demo dir and xxx_demo.c + SConscript
+    # 2. add example dir and xxx_example.c + SConscript
     example_path = os.path.join(package_path, "example") 
-    example_demo_c_path = os.path.join(example_path, package_name + "_demo.c") 
+    example_c_path = os.path.join(example_path, package_name + "_example.c") 
     os.makedirs(example_path) 
-    with open(example_demo_c_path, "a+") as fp: 
+    with open(example_c_path, "a+") as fp: 
         pass
     replace_list = {
         "pkgname": package_name, 
