@@ -1,5 +1,7 @@
 <div align="center">
-  <h1>buildpkg</h1>
+  <a href="https://github.com/rtpkgs/buildpkg">
+    <img width="200" heigth="200" src="/figures/logo.png">
+  </a>  
 
   <div align="center">
     <a href="https://github.com/rtpkgs/buildpkg">
@@ -8,9 +10,6 @@
     <a href="https://github.com/rtpkgs/buildpkg/stargazers">
       <img src="https://img.shields.io/github/stars/rtpkgs/buildpkg.svg?style=flat-square" alt="stargazers" />
     </a>
-  </div>
-
-  <div align="center">
     <a href="https://github.com/rtpkgs/buildpkg">
       <img src="https://img.shields.io/github/downloads/rtpkgs/buildpkg/total.svg?style=flat-square" alt="downloads" />
     </a>
