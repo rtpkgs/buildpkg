@@ -10,8 +10,8 @@
     <a href="https://github.com/rtpkgs/buildpkg/stargazers">
       <img src="https://img.shields.io/github/stars/rtpkgs/buildpkg.svg?style=flat-square" alt="stargazers" />
     </a>
-    <a href="https://github.com/rtpkgs/buildpkg">
-      <img src="https://img.shields.io/github/downloads/rtpkgs/buildpkg/total.svg?style=flat-square" alt="downloads" />
+    <a href="https://github.com/rtpkgs/buildpkg/graphs/contributors">
+      <img src="https://img.shields.io/github/contributors/rtpkgs/buildpkg.svg?style=flat-square" alt="contributors" />
     </a>
     <a href="https://github.com/rtpkgs/buildpkg/blob/master/LICENSE">
         <img src="https://img.shields.io/github/license/rtpkgs/buildpkg.svg?style=flat-square" alt="license" />
