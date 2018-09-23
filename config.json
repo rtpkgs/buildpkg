@@ -1,9 +1,9 @@
+
 {
-    "username"              : "liu2guang", 
+    "username"              : "None", 
     "list_ignore_inc"       : [".git", "example", "doc", "test"], 
     "list_ignore_src"       : ["test.c", "example.c"], 
 
-    
     "template": 
     {
         "github-ci"         : "template-github-ci.txt",
@@ -14,5 +14,5 @@
         "sconscript-example": "template-sconscript-example.txt"
     },
     "pkg_def_version"       : "v1.0.0", 
-    "commit_content"        : "[AutoBuild] Use the buildpkg tool to quickly build {{pkgname}}'s packages!"
+    "commit_content"        : "[builpkg] Use the buildpkg tool to quickly build {{pkgname}}'s packages!"
 }

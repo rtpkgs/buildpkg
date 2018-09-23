@@ -1,16 +1,33 @@
-# -*- coding:utf-8 –*- 
+# -*- coding:utf-8 –*-
+# 
+# ################################################################################
 # @File:   buildpkg.py 
 # @Author: liu2guang
 # @Date:   2018-09-19 18:07:00
+# 
+#                _____                                                            
+#               /     \                                                           
+#               vvvvvvv  /|__/|                                                   
+#                  I   /O,O   |                                                   
+#                  I /_____   |      /|/|                                         
+#                 J|/^ ^ ^ \  |    /00  |    _//|                                 
+#                  |^ ^ ^ ^ |W|   |/^^\ |   /oo |                                 
+#                   \m___m__|_|    \m_m_|   \mm_|                                 
+#
+#                                      Quick build rt-thread pkg toolkits         
+#                                                           --- liu2guang         
 #
 # @LICENSE: GPLv3: https://github.com/rtpkgs/buildpkg/blob/master/LICENSE.
 #
 # Change Logs:
 # Date           Author       Notes 
 # 2018-09-19     liu2guang    The first version. 
+# 2018-09-20     liu2guang    To optimize the implementation. 
+#
+# ################################################################################
 
 # --------------------------------------------------------------------------------
-# import module 
+# Import module 
 # --------------------------------------------------------------------------------
 import os, sys 
 import logging
@@ -21,275 +38,178 @@ import shutil
 import platform
 
 # --------------------------------------------------------------------------------
-# @ 发布信息 
-# @ Todo: 
-#     1. 实现发布和调试配置的功能, 方便以后开发. 
+# Info and config 
 # --------------------------------------------------------------------------------
-_BUILDPKG_VERSION = "v0.2.0" 
-_BUILDPKG_AUTHOR  = "liu2guang" 
-_BUILDPKG_LICENSE = "GPLv3" 
-_BUILDPKG_RELEASE = False
+_BUILDPKG_VERSION      = "v0.2.0" 
+_BUILDPKG_AUTHOR       = "liu2guang" 
+_BUILDPKG_LICENSE      = "GPLv3" 
+_BUILDPKG_RELEASE      =  False
+
+_BUILDPKG_CONTRIBUTORS = {
+    "liu2guang" : "https://github.com/liu2guang", 
+    "balanceTWK": "https://github.com/balanceTWK" 
+}
+_BUILDPKG_LOG_FORMAT   = "[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s" 
+
+_BUILDPKG_RUN_LOG_FILE = "buildpkg.log"
+_BUILDPKG_PKG_LOG_FILE = os.path.join("packages", "pkglist.log") 
 
 # --------------------------------------------------------------------------------
-# @ 创建运行日志和Package生成日志
-# @ Note: 
-#     1. 运行日志是存储在"buildpkg.log"文件中. 
-#     2. Package构建信息日志是存储在"packages/pkglist.log"中, INFO等级. 
-#     3. 发布时run log写入文件中等级需要是最低的, 控制台的等级需要是INFO. 
-# 
-# @ Todo: 
-#     1. 优化日志打印格式.  
-#     2. 实现捕获所有异常这样日志才有作用, 还有就是邮箱发送日志? 
-#     3. 优雅的实现这部分代码, 感觉很奇怪说不上来. 
+# Variable: path/log 
 # --------------------------------------------------------------------------------
-_BUILDPKG_LOG_FORMAT = "[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s" 
+_buildpkg_path                      = None # ./buildpkg/ 
+_buildpkg_template_path             = None # ./buildpkg/template/
+_buildpkg_packages_path             = None # ./buildpkg/template/
+_buildpkg_packages_xxx_path         = None # ./buildpkg/template/xxx
+_buildpkg_packages_xxx_example_path = None # ./buildpkg/template/xxx/example
+_buildpkg_packages_xxx_scripts_path = None # ./buildpkg/template/xxx/scripts
 
-# check packgae directory is exist
-if os.path.exists("packages") == False: 
-    os.makedirs("packages") 
+_run_log = None # run buildpkg log 
+_pkg_log = None # create the package record log 
 
-def _buildpkg_run_log(file): 
-    log = logging.getLogger("buildpkg") 
-    log.setLevel(logging.DEBUG)
-    format = logging.Formatter(_BUILDPKG_LOG_FORMAT)
+# default config 
+_config_default = """
+{
+    "username"              : "None", 
+    "list_ignore_inc"       : [".git", "example", "doc", "test"], 
+    "list_ignore_src"       : ["test.c", "example.c"], 
 
-    c = logging.StreamHandler()
-    f = logging.FileHandler(file)
-    c.setFormatter(format)
+    "template": 
+    {
+        "github-ci"         : "template-github-ci.txt",
+        "kconfig"           : "template-kconfig.txt",
+        "package-json"      : "template-package-json.txt",
+        "readme"            : "template-readme-rtt.txt",
+        "sconscript"        : "template-sconscript.txt", 
+        "sconscript-example": "template-sconscript-example.txt"
+    },
+    "pkg_def_version"       : "v1.0.0", 
+    "commit_content"        : "[builpkg] Use the buildpkg tool to quickly build {{pkgname}}'s packages!"
+}
+"""
+
+_config = None
+
+# --------------------------------------------------------------------------------
+# Create log object
+# --------------------------------------------------------------------------------
+def _create_log(log_name, log_path, level = logging.INFO, console = True):
+    log = logging.getLogger(log_name) 
+    log.setLevel(logging.DEBUG) 
+    format = logging.Formatter(_BUILDPKG_LOG_FORMAT) 
+
+    f = logging.FileHandler(log_path)
     f.setFormatter(format)
-    c.setLevel(logging.DEBUG) 
     f.setLevel(logging.DEBUG)
-    log.addHandler(c) 
     log.addHandler(f) 
 
-    return log
+    if console == True: 
+        c = logging.StreamHandler() 
+        c.setFormatter(format) 
+        c.setLevel(level) 
+        log.addHandler(c) 
 
-def _buildpkg_pkg_log(file): 
-    log = logging.getLogger("pkglist") 
-    log.setLevel(logging.DEBUG)
-    format = logging.Formatter(_BUILDPKG_LOG_FORMAT)
-
-    f = logging.FileHandler(file)
-    f.setFormatter(format)
-    f.setLevel(logging.DEBUG)
-    log.addHandler(f) 
-
-    return log
-
-run_log = _buildpkg_run_log("buildpkg.log") 
-pkg_log = _buildpkg_pkg_log("packages/pkglist.log") 
+    return log 
 
 # --------------------------------------------------------------------------------
-# @ 命令配置
-# @ Note: 
-#     1. action: 
-#           1. make: 构建或者迁移仓库, 可以构建空仓库, 也可以迁移开源的仓库. 
-#           2. update: 更新readme, 版本号, scons脚本. 
-#     2. pkgname: 构建或者迁移仓库时的生成的本地仓库的名称, 迁移仓库时可以不指定pkgname, 
-#                 会自动从git地址去获取名称.
-#     3. pkgrepo: 迁移仓库时的git地址. 
-#     4. version: 构建或者迁移仓库时指定版本, 可选配置, 没有配置时默认为v1.0.0, 默认配置
-#                 可以在"config.json"中的"pkg_def_version"进行修改配置. 
-#     5. license: 构建或者迁移仓库时指定许可证, 支持的许可证类型有以下种类: 
-#                 agpl3, apache, bsd2, bsd3, cddl, cc0, epl, gpl2, gpl3, lgpl, mit, mpl
-#                 没有指定许可证时默认不添加许可证. 
-# 
-# @ Todo: 
-#     1. 关于make同时构建或者迁移是否可以分为2个指令, create/transplant?. 
-#     2. 实现捕获所有异常这样日志才有作用, 还有就是邮箱发送日志? 
-#     3. 优雅的实现这部分代码, 感觉很奇怪说不上来. 
+# Load confg 
 # --------------------------------------------------------------------------------
-parser = argparse.ArgumentParser(
-    description = "Quick build rt-thread pkg toolkits")
-parser.add_argument(  "action"   ,        type = str, help = "The action of build package by buildpkg", choices=["make", "update"]) 
-parser.add_argument(  "pkgname"  ,        type = str, help = "The package name to be make or update", nargs = "?") 
-parser.add_argument(  "pkgrepo"  ,        type = str, help = "To make the package from the specified git repository", nargs = "?") 
-parser.add_argument("--version"  , "-v" , type = str, help = "The package version to be make or update") 
-parser.add_argument("--license"  , "-l" , type = str, help = "The package license to be make or update, one of: agpl3, apache, bsd2, bsd3, cddl, cc0, epl, gpl2, gpl3, lgpl, mit, mpl") 
-parser.add_argument("--remove-submodule", action='store_true', help = "Remove the submodule of repository")
+def _load_config(filename): 
+    # 1. check if "filename" file exists
+    if os.path.exists(filename) == False: 
+        with open(filename, 'w+') as file: 
+            file.write(_config_default) 
 
-# Load buildpkg config 
-# Todo: try
-with open("config.json", 'r') as f:
-    _config = json.load(f)
-    run_log.debug("Read config: \n" + json.dumps(_config, indent=4)) 
-
-# generate file
-def _buildpkg_generate_file(template_name, pkgname, target_path, replace_list): 
-    run_log.info("Ready add %s file." % (target_path)) 
-    run_log.debug("Replace the list is " + str(replace_list)) 
-
-    template_path = os.path.join("template", _config["template"][template_name])
-    target_file_path = os.path.join("packages", pkgname, target_path) 
-    # print(template_path)
-    # print(target_file_path)
-
-    if sys.version_info < (3, 0): 
-        with open(template_path, 'r') as file_in, open(target_file_path, 'w+') as file_out: 
-            textlist = file_in.readlines()
-            for line in textlist: 
-                for (key, value) in replace_list.items():
-                    line = line.replace("{{" + key + "}}", value) 
-                file_out.write(line) 
-    else: 
-        with open(template_path, 'r', encoding='utf-8') as file_in, open(target_file_path, 'w+', encoding='utf-8') as file_out: 
-            textlist = file_in.readlines()
-            for line in textlist: 
-                for (key, value) in replace_list.items():
-                    line = line.replace("{{" + key + "}}", value) 
-                file_out.write(line) 
-
-    run_log.info("Add %s file success." % (target_path)) 
-
-# buildpkg cmd
-def _buildpkg_make_package(pkgname = None, pkgrepo = None, version = _config["pkg_def_version"], license = None, remove_submodule = False): 
-    base_repo_flag = False
-
-    if version == None: 
-        version = _config["pkg_def_version"]
-
-    if pkgname == None and pkgrepo == None: 
-        run_log.error("Please input pkgname or pkgrepo while you make package!") 
-        run_log.error("Stop make package!\n") 
-        exit(1); 
-
-    # 2. buildpkg make cstring 
-    # 3. buildpkg make https://github.com/liu2guang/cstring.git
-    if pkgname != None and pkgrepo == None: 
-        if pkgname.endswith(".git") == True: 
-            package_name = pkgname.split("/")[-1].replace(".git", "") 
-            pkgrepo = pkgname
+    # 2. check that "filename" is illegal, Waiting for user processing
+    try: 
+        with open(filename, 'r') as file:
+            json.load(file)
+            # json.load(file, encoding='utf-8')
+    except ValueError: 
+        _run_log.info("\"config.json\" is not illegal, whether to regenerate the default configuration [Y/N]: ")
+        option = input() 
+        if option == "Y" or option == "y" or option == "YES" or option == "Yes" or option == "yes" or option == "": 
+            _run_log.info("Y") 
+            with open(filename, 'w+') as file: 
+                file.write(_config_default)
         else: 
-            package_name = pkgname
-            base_repo_flag = True
+            _run_log.info("N") 
+            _run_log.info("Please modify config.json correctly before running buildpkg") 
+            exit(1)
 
-    # 4. buildpkg make cstring https://github.com/liu2guang/cstring.git 
-    elif pkgname != None and pkgrepo != None: 
-        package_name = pkgname
+        _run_log.info("Fix the config.json file contents")
 
-    run_log.info("The package name is %s." % (package_name)) 
-    run_log.info("The package repo addr is %s." % (pkgrepo)) 
+    # load config
+    global _config
 
-    package_path = os.path.join("packages", package_name) 
+    with open(filename, 'r') as file:
+        _config = json.load(file) 
+        _run_log.debug("Buildpkg load config: \n" + json.dumps(_config, indent=4)) 
 
-    # check package/pkgname directory is exist 
-    if os.path.exists(package_path) == True: 
-        package_path_backup = package_path + "_backup_" + time.strftime("%y%m%d_%H%M%S", time.localtime()) 
-        run_log.warning("\"%s\" already existed, backup to \"%s\"" %(package_path, package_path_backup))
-        os.rename(package_path, package_path_backup)
+# --------------------------------------------------------------------------------
+# Check self(It will load the configuration)
+# --------------------------------------------------------------------------------
+def _check_self(): 
+    # 1. check if the "package" directory exists
+    if os.path.exists("packages") == False: 
+        os.makedirs  ("packages") 
 
-    os.makedirs(package_path) 
-    run_log.info("\"%s\" directory create success!" % (package_path)) 
+    # 2. check if the "template" directory exists
+    if os.path.exists("template") == False: 
+        os.makedirs  ("template") 
 
-    username = _config["username"]
+    # 3. check if "filename" file exists
+    #    check that "filename" is illegal, Waiting for user processing
+    #    load config
+    _load_config("config.json") 
 
-    # 1. add readme.md 
-    replace_list = {
-        "username": username, 
-        "pkgname": package_name, 
-        "version": version
-        }
-    _buildpkg_generate_file("readme", package_name, "readme.md", replace_list) 
+    # 4. check if License file exists
+    if os.path.exists("LICENSE") == False: 
+        _run_log.info("Please do not delete the license, otherwise you will not be able to use buildpkg!") 
+        exit(1)
 
-    # 2. add example dir and xxx_example.c + SConscript
-    example_path = os.path.join(package_path, "example") 
-    example_c_path = os.path.join(example_path, package_name + "_example.c") 
-    os.makedirs(example_path) 
-    with open(example_c_path, "a+") as fp: 
-        pass
-    replace_list = {
-        "pkgname": package_name, 
-        "version": version, 
-        "pkgname_letter": package_name.upper()
-        }
-    _buildpkg_generate_file("sconscript-example", package_name, os.path.join("example", "SConscript"), replace_list) 
+# --------------------------------------------------------------------------------
+# Analyze the path to use 
+# --------------------------------------------------------------------------------
+def _analyze_path(package_name): 
+    global _buildpkg_path 
+    global _buildpkg_template_path 
+    global _buildpkg_packages_path 
+    global _buildpkg_packages_xxx_path 
+    global _buildpkg_packages_xxx_example_path 
+    global _buildpkg_packages_xxx_scripts_path 
 
-    # 3. add SConscript 
-    replace_list = {
-        "pkgname": package_name, 
-        "version": version, 
-        "pkgname_letter": package_name.upper(), 
-        "list_ignore_inc": str(_config["list_ignore_inc"]), 
-        "list_ignore_src": str(_config["list_ignore_src"])
-        }
-    _buildpkg_generate_file("sconscript", package_name, "SConscript", replace_list) 
+    _buildpkg_path = os.getcwd() 
+    _buildpkg_template_path = os.path.join(_buildpkg_path, "templates") 
+    _buildpkg_packages_path = os.path.join(_buildpkg_path, "packages") 
+    _buildpkg_packages_xxx_path = os.path.join(_buildpkg_packages_path, package_name) 
+    _buildpkg_packages_xxx_example_path = os.path.join(_buildpkg_packages_xxx_path, "example") 
+    _buildpkg_packages_xxx_scripts_path = os.path.join(_buildpkg_packages_xxx_path, "scripts") 
 
-    # 4. add github ci and copy 'template/bsp_script/' to 'pkg/scripts'
-    replace_list = {
-        "username": username, 
-        "pkgname": package_name
-        } 
-    _buildpkg_generate_file("github-ci", package_name, ".travis.yml", replace_list) 
-    shutil.copytree(os.path.join("template", "bsp_script"), os.path.join("packages", package_name, "scripts"))
+    _run_log.debug("Analyze the path to use: ")
+    _run_log.debug("- buildpkg_path                     : " + _buildpkg_path)
+    _run_log.debug("- buildpkg_template_path            : " + _buildpkg_template_path)
+    _run_log.debug("- buildpkg_packages_path            : " + _buildpkg_packages_path)
+    _run_log.debug("- buildpkg_packages_xxx_path        : " + _buildpkg_packages_xxx_path)
+    _run_log.debug("- buildpkg_packages_xxx_example_path: " + _buildpkg_packages_xxx_example_path)
+    _run_log.debug("- buildpkg_packages_xxx_scripts_path: " + _buildpkg_packages_xxx_scripts_path)
 
-    # 5. add license 
-    if license != None: 
-        run_log.info("add package %s license." % (license)) 
-        cmd = "lice " + license.lower() + " -f " + os.path.join(package_path, "license") + " -o " + _config["username"]
-        os.system(cmd) 
-        run_log.info("add package license success.") 
+# --------------------------------------------------------------------------------
+# main
+# --------------------------------------------------------------------------------
+def main(): 
+    # 1. create run and pkg log 
+    # 2. parse input args 
+    # 3. self check 
+    # 4. analyze path
+    global _run_log 
+    global _pkg_log 
+    _run_log = _create_log("run_log", _BUILDPKG_RUN_LOG_FILE, logging.DEBUG if _BUILDPKG_RELEASE == False else logging.INFO, True)
+    _pkg_log = _create_log("pkg_log", _BUILDPKG_PKG_LOG_FILE, logging.DEBUG, False)
 
-    # 6. init git repo
-    run_log.info("add git repository.") 
-    pwd = os.getcwd()
-    os.chdir(package_path) 
-    os.system("git init") 
-    run_log.debug("Initialize the git repository success") 
+    _check_self() 
 
-    # 6. add git repo
-    if base_repo_flag == False: 
-        if remove_submodule == True: 
-            os.system('git clone --progress --recursive ' + pkgrepo + " " + package_name) 
-            os.chdir(package_name) 
-            git_removepath = os.path.join(os.getcwd(), '.git') 
-            if platform.system() == 'Windows':
-                run_log.debug("Windows platform") 
-                os.system('attrib -r ' + git_removepath + '\\*.* /s') # 递归修改windows下面的只读文件为可读属性
-            elif platform.system() == 'Linux': 
-                run_log.debug("Linux platform") # Todo
-            else:
-                run_log.debug("Other platform") # Todo
-
-            shutil.rmtree(git_removepath) 
-            run_log.debug("Add the \"%s\" repository code" % (package_name)) 
-        else: 
-            os.system("git submodule add " + pkgrepo) 
-            run_log.debug("Add the \"%s\" git submodule" % (package_name)) 
-        run_log.info("add git repository success.") 
-
-    os.chdir(pwd) 
-
-    # 7. commit the first commit
-    run_log.info("commit the first commit.") 
-    pwd = os.getcwd()
-    os.chdir(package_path) 
-
-    # Prevent git from generating warnings: LF will be replaced by CRLF
-    if(platform.system() == 'Windows'):
-        os.system('git config --global core.autocrlf false') 
-
-    os.system('git add -A') 
-    commit_content = _config["commit_content"]
-    os.system("git commit -m \"" + commit_content.replace("{{pkgname}}", package_name) + "\"") 
-    os.chdir(pwd) 
-    run_log.info("commit the first commit success.") 
-
-    # 8. add pkg list log
-    pkg_log.info("build package success: '%s'." % (package_name))
+    _analyze_path("xxx")
 
 if __name__ == "__main__":
-    run_log.info("Start run buildpkg") 
-    run_log.info("Current buildpkg version %s" % (_BUILDPKG_VERSION)) 
-
-    # parse and print input args 
-    args = parser.parse_args() 
-    run_log.debug(args) 
-
-    # build package
-    if args.action == "make": 
-        run_log.info("The package is being built.") 
-        _buildpkg_make_package(args.pkgname, args.pkgrepo, args.version, args.license, args.remove_submodule) 
-        run_log.info("To completion package build.\n") 
-    elif args.action == "update": 
-        run_log.info("The package is being update.") 
-        run_log.info("To completion package update.\n") 
+    main()
