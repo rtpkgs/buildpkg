@@ -43,7 +43,7 @@ import platform
 _BUILDPKG_VERSION      = "v0.2.0" 
 _BUILDPKG_AUTHOR       = "liu2guang" 
 _BUILDPKG_LICENSE      = "GPLv3" 
-_BUILDPKG_RELEASE      =  True
+_BUILDPKG_RELEASE      =  False
 
 _BUILDPKG_CONTRIBUTORS = {
     "liu2guang" : "https://github.com/liu2guang", 
@@ -185,7 +185,41 @@ def _load_config(filename):
             _save_config("config.json")
 
         _run_log.info("Update %s to config.json." % (_config["username"]))
- 
+
+# --------------------------------------------------------------------------------
+# Save package confg 
+# --------------------------------------------------------------------------------
+def _save_package_config(filename, config): 
+    if sys.version_info < (3, 0): 
+        with open(filename, "w+") as _file:
+            _file.write(json.dumps(config, indent=4)) 
+    else: 
+        with open(filename, "w+", encoding='utf-8') as _file:
+            _file.write(json.dumps(config, indent=4)) 
+
+# --------------------------------------------------------------------------------
+# Load package confg 
+# --------------------------------------------------------------------------------
+def _load_package_config(filename): 
+    # 1. check if "filename" file exists
+    if os.path.exists(filename) == False:  
+        return False  
+
+    # 2. check that "filename" is illegal, Waiting for user processing
+    try: 
+        with open(filename, 'r') as file:
+            json.load(file)
+    except ValueError: 
+        return False 
+
+    # 3. load package config
+    with open(filename, 'r') as file:
+        _package_config = json.load(file) 
+
+    _run_log.debug("Buildpkg load package config: \n" + json.dumps(_package_config, indent=4)) 
+
+    return _package_config
+
 # --------------------------------------------------------------------------------
 # Check self(It will load the configuration)
 # --------------------------------------------------------------------------------
@@ -291,14 +325,14 @@ def _generate_file(template_name, target_name, replace_list):
 # Commit package git 
 # --------------------------------------------------------------------------------
 def _commit_git(pkgname, commit_content): 
-    _run_log.info("Start commit the first commit.") 
+    _run_log.info("Start commit the commit.") 
     os.chdir(_buildpkg_packages_xxx_path)
 
     os.system('git add -A') 
     os.system("git commit -m \"" + commit_content.replace("${pkgname}", pkgname) + "\"") 
 
     os.chdir(_buildpkg_path) 
-    _run_log.info("Commit the first commit success.") 
+    _run_log.info("Commit the commit success.") 
 
 # --------------------------------------------------------------------------------
 # Generate package
@@ -375,14 +409,10 @@ def _make_package(pkgname, version = None, license = None):
     __buildpkg_config_json_path              = os.path.join(_buildpkg_path, "config.json")
     __buildpkg_packages_xxx_config_json_path = os.path.join(_buildpkg_packages_xxx_path, "config.json")
 
-    if sys.version_info < (3, 0): 
-        with open(__buildpkg_config_json_path, 'r') as _file_in, open(__buildpkg_packages_xxx_config_json_path, 'w+') as _file_out:
-            _contents = _file_in.read() 
-            _file_out.write(_contents) 
-    else: 
-        with open(__buildpkg_config_json_path, 'r', encoding='utf-8') as _file_in, open(__buildpkg_packages_xxx_config_json_path, 'w+', encoding='utf-8') as _file_out:
-            _contents = _file_in.read() 
-            _file_out.write(_contents) 
+    _config_save = {}
+    _config_save.update(_config)
+    _config_save.update(_replace_list) 
+    _save_package_config(__buildpkg_packages_xxx_config_json_path, _config_save)
 
     _run_log.info("Save the configuration success.") 
 
@@ -411,7 +441,7 @@ def _transplant_package(pkgname, pkgrepo, version = None, license = None, submod
         os.chdir(_buildpkg_packages_xxx_path)
         os.system("git submodule add " + pkgrepo) 
         os.chdir(_buildpkg_path)
-        _run_log.debug("Add %s to the %s repository as a submodule" % (pkgrepo, pkgname))  
+        _run_log.debug("Add %s to the %s repository as a submodule." % (pkgrepo, pkgname))  
 
     # 1.2 Add to the repository as source code when Transplant package  
     else:
@@ -423,16 +453,72 @@ def _transplant_package(pkgname, pkgrepo, version = None, license = None, submod
         os.system('attrib -r ' + _git_remove_path + '\\*.* /s')
         shutil.rmtree(_git_remove_path) 
         os.chdir(_buildpkg_path)
-        _run_log.info("Add %s to the %s repository as source code" % (pkgrepo, pkgname)) 
+        _run_log.info("Add %s to the %s repository as source code." % (pkgrepo, pkgname)) 
 
 # --------------------------------------------------------------------------------
 # Update package
 # --------------------------------------------------------------------------------
 def _update_package(pkgname, version = None, license = None): 
-    # 1. 读取之前生成的配置
-    # 2. 更新readme/scons/scons_demo/license/ci 
-    # 3. 保持配置文件
-    pass
+    global _config
+    global _buildpkg_path 
+    global _buildpkg_template_path 
+    global _buildpkg_packages_path 
+    global _buildpkg_packages_xxx_path 
+    global _buildpkg_packages_xxx_example_path 
+    global _buildpkg_packages_xxx_scripts_path  
+    
+    # 1. Read the previously generated configuration 
+    _package_config_path = os.path.join(_buildpkg_packages_path, pkgname, "config.json")  
+    _package_config = _load_package_config(_package_config_path)
+
+    _replace_list = {
+        "username"       : _config["username"], 
+        "pkgname"        : _package_config["pkgname"], 
+        "version"        : _package_config["version"] if version == None else version,
+        "pkgname_letter" : _package_config["pkgname_letter"], 
+        "list_ignore_inc": str(_config["list_ignore_inc"]), 
+        "list_ignore_src": str(_config["list_ignore_src"])
+    }
+
+    # 2. Update the /readme.md file
+    _generate_file(_templates["readme_md"], "readme.md", _replace_list)
+
+    # 3. Update the /SConscript file
+    _generate_file(_templates["sconscript"], "SConscript", _replace_list)    
+
+    # 4. Update the /example/SConscript file
+    _example_sconscript_path = os.path.join("example", "SConscript")
+    _generate_file(_templates["sconscript_example"], _example_sconscript_path, _replace_list) 
+
+    # 5. Update the /.travis.yml file
+    _templates_ci_script_dir_path = os.path.join(_buildpkg_template_path, "ci_script_github") 
+    shutil.rmtree(_buildpkg_packages_xxx_scripts_path) 
+    shutil.copytree(_templates_ci_script_dir_path, _buildpkg_packages_xxx_scripts_path)
+    _generate_file(_templates["ci_github"], ".travis.yml", _replace_list) 
+
+    # 6. Update the /LICENSE file 
+    if license != None: 
+        _license_file_path = os.path.join(_buildpkg_packages_xxx_path, "LICENSE")
+        _run_log.info("Generate [%s LICENSE] file by \"lice module\"." % (license))
+        cmd = "lice " + license.lower() + " -f " + _license_file_path + " -o " + _config["username"]
+        os.system(cmd) 
+
+        if os.path.exists(_license_file_path) == True: 
+            _run_log.info("Generate [%s LICENSE] file success." % (license)) 
+        else: 
+            _run_log.error("Generate [%s LICENSE] file failed." % (license))       
+
+    # 7. Save the configuration file when generating the project
+    _run_log.info("Save the configuration file to [%s]." % (pkgname)) 
+    __buildpkg_config_json_path              = os.path.join(_buildpkg_path, "config.json")
+    __buildpkg_packages_xxx_config_json_path = os.path.join(_buildpkg_packages_xxx_path, "config.json")
+
+    _config_save = {}
+    _config_save.update(_config)
+    _config_save.update(_replace_list) 
+    _save_package_config(__buildpkg_packages_xxx_config_json_path, _config_save)
+
+    _run_log.info("Save the configuration success.")   
 
 # --------------------------------------------------------------------------------
 # Main
@@ -462,11 +548,11 @@ def main():
         # 4.1. make package 
         if _args.pkgrepo == None:  
             _make_package(_args.pkgname, _args.version, _args.license)
-            _commit_git(_args.pkgname, _config["commit_content"] )
+            _commit_git(_args.pkgname, _config["commit_content"])
         # 4.2. transplant package
         else: 
             _transplant_package(_args.pkgname, _args.pkgrepo, _args.version, _args.license, _args.submodule)
-            _commit_git(_args.pkgname, _config["commit_content"] )
+            _commit_git(_args.pkgname, _config["commit_content"])
 
         _run_log.info("To complete to make package [%s]!" % (_args.pkgname))
         _pkg_log.info("To complete to make package [%s]!" % (_args.pkgname))
