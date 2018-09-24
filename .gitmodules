@@ -1,0 +1,3 @@
+[submodule "cstring"]
+	path = cstring
+	url = https://github.com/liu2guang/cstring.git

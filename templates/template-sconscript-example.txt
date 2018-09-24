@@ -15,6 +15,6 @@ inc = inc + [cwd]
 src = src + Glob('./*.c')
 
 # add group to IDE project
-objs = DefineGroup('{{pkgname}}-{{version}}', src, depend = ['{{pkgname_letter}}_USING_DEMO'], CPPPATH = inc)
+objs = DefineGroup('${pkgname}-${version}', src, depend = ['${pkgname_letter}_USING_DEMO'], CPPPATH = inc)
 
 Return('objs')

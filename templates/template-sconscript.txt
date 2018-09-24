@@ -30,11 +30,14 @@ list_ignore_src = []
 # --------------------------------------------------------------------------------
 #  user add ignore: 
 # --------------------------------------------------------------------------------
-list_ignore_inc += {{list_ignore_inc}} 
-list_ignore_src += {{list_ignore_src}} 
+list_ignore_inc += [] 
+list_ignore_src += []
 
-print(list_ignore_inc)
-print(list_ignore_src)
+# --------------------------------------------------------------------------------
+#  auto add ignore: 
+# --------------------------------------------------------------------------------
+list_ignore_inc += ${list_ignore_inc} 
+list_ignore_src += ${list_ignore_src} 
 
 # Traverse package, add code and path to project 
 def traverse_package(f):
@@ -59,11 +62,11 @@ def traverse_package(f):
 traverse_package(cwd) 
 
 # Add group to IDE project
-objs = DefineGroup('{{pkgname}}-{{version}}', src, depend = ['PKG_USING_{{pkgname_letter}}'], CPPPATH = inc)
+objs = DefineGroup('${pkgname}-${version}', src, depend = ['PKG_USING_${pkgname_letter}'], CPPPATH = inc)
 
 # Traversal subscript
 list = os.listdir(cwd)
-if GetDepend(['PKG_USING_{{pkgname_letter}}']):
+if GetDepend(['PKG_USING_${pkgname_letter}']):
     for d in list:
         path = os.path.join(cwd, d)
         if os.path.isfile(os.path.join(path, 'SConscript')):
