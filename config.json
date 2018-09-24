@@ -1,17 +1,23 @@
 {
-    "username"              : "liu2guang", 
-    "list_ignore_inc"       : [".git", "example", "doc", "test"], 
-    "list_ignore_src"       : ["test.c", "example.c"], 
-
-    "templates": 
-    {
-        "readme_md"         : "template-readme-rtt.txt",
-        "sconscript"        : "template-sconscript.txt", 
-        "sconscript_example": "template-sconscript-example.txt", 
-        "ci_github"         : "template-ci-github.txt",
-        "kconfig"           : "template-kconfig.txt",
-        "package_json"      : "template-package-json.txt"
+    "username": "liu2gunag",
+    "list_ignore_inc": [
+        ".git",
+        "example",
+        "doc",
+        "test"
+    ],
+    "list_ignore_src": [
+        "test.c",
+        "example.c"
+    ],
+    "templates": {
+        "readme_md": "template-readme-rtt.txt",
+        "sconscript": "template-sconscript.txt",
+        "sconscript_example": "template-sconscript-example.txt",
+        "ci_github": "template-ci-github.txt",
+        "kconfig": "template-kconfig.txt",
+        "package_json": "template-package-json.txt"
     },
-    "pkg_def_version"       : "v1.0.0", 
-    "commit_content"        : "[builpkg] Use the buildpkg tool to quickly build ${pkgname}'s packages!" 
+    "pkg_def_version": "v1.0.0",
+    "commit_content": "[builpkg] Use the buildpkg tool to quickly build ${pkgname}'s packages!"
 }

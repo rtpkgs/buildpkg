@@ -77,15 +77,15 @@ _config_default = """
 
     "templates": 
     {
-        "github-ci"         : "template-github-ci.txt",
-        "kconfig"           : "template-kconfig.txt",
-        "package-json"      : "template-package-json.txt",
-        "readme"            : "template-readme-rtt.txt",
+        "readme_md"         : "template-readme-rtt.txt",
         "sconscript"        : "template-sconscript.txt", 
-        "sconscript-example": "template-sconscript-example.txt"
+        "sconscript_example": "template-sconscript-example.txt", 
+        "ci_github"         : "template-ci-github.txt",
+        "kconfig"           : "template-kconfig.txt",
+        "package_json"      : "template-package-json.txt"
     },
     "pkg_def_version"       : "v1.0.0", 
-    "commit_content"        : "[builpkg] Use the buildpkg tool to quickly build ${pkgname}'s packages!"
+    "commit_content"        : "[builpkg] Use the buildpkg tool to quickly build ${pkgname}'s packages!" 
 }
 """
 
@@ -130,6 +130,17 @@ def _create_log(log_name, log_path, level = logging.INFO, console = True):
     return log 
 
 # --------------------------------------------------------------------------------
+# Save confg 
+# --------------------------------------------------------------------------------
+def _save_config(filename): 
+    if sys.version_info < (3, 0): 
+        with open(filename, "w") as _file:
+            _file.write(json.dumps(_config, indent=4)) 
+    else: 
+        with open(filename, "w", encoding='utf-8') as _file:
+            _file.write(json.dumps(_config, indent=4)) 
+
+# --------------------------------------------------------------------------------
 # Load confg 
 # --------------------------------------------------------------------------------
 def _load_config(filename): 
@@ -157,7 +168,7 @@ def _load_config(filename):
 
         _run_log.info("Fix the config.json file contents.")
 
-    # load config
+    # 3. load config
     global _config
     global _templates
 
@@ -166,6 +177,15 @@ def _load_config(filename):
         _templates = _config["templates"]
         _run_log.debug("Buildpkg load config: \n" + json.dumps(_config, indent=4)) 
 
+    # 4. check that the user name is configured 
+    if _config["username"] == "None": 
+        _run_log.info("Please enter your github username: ") 
+        _config["username"] = input()
+        if _config["username"] != "" and _config["username"] != "None": 
+            _save_config("config.json")
+
+        _run_log.info("Update %s to config.json." % (_config["username"]))
+ 
 # --------------------------------------------------------------------------------
 # Check self(It will load the configuration)
 # --------------------------------------------------------------------------------
@@ -320,7 +340,7 @@ def _make_package(pkgname, version = None, license = None):
             os.makedirs(_buildpkg_packages_xxx_path) 
     
     os.makedirs(_buildpkg_packages_xxx_example_path) 
-    os.makedirs(_buildpkg_packages_xxx_scripts_path) 
+    # os.makedirs(_buildpkg_packages_xxx_scripts_path) 
 
     # 1. Generate the /readme.md file
     _generate_file(_templates["readme_md"], "readme.md", _replace_list)
@@ -333,6 +353,9 @@ def _make_package(pkgname, version = None, license = None):
     _generate_file(_templates["sconscript_example"], _example_sconscript_path, _replace_list) 
 
     # 4. Generate the /.travis.yml file
+    _templates_ci_script_dir_path = os.path.join(_buildpkg_template_path, "ci_script_github") 
+
+    shutil.copytree(_templates_ci_script_dir_path, _buildpkg_packages_xxx_scripts_path)
     _generate_file(_templates["ci_github"], ".travis.yml", _replace_list) 
 
     # 5. Generate the /LICENSE file 
@@ -421,6 +444,12 @@ def main():
 
     _run_log = _create_log("run_log", _BUILDPKG_RUN_LOG_FILE, logging.DEBUG if _BUILDPKG_RELEASE == False else logging.INFO, True)
     _pkg_log = _create_log("pkg_log", _BUILDPKG_PKG_LOG_FILE, logging.DEBUG, False) 
+
+    _run_log.info("<< Start run buildpkg >>")
+    _run_log.info("Version      : %s" % (_BUILDPKG_VERSION))
+    _run_log.info("Author       : %s" % (_BUILDPKG_AUTHOR))
+    _run_log.info("License      : %s" % (_BUILDPKG_LICENSE))
+    _run_log.info("Conteributors: %s" % (str(_BUILDPKG_CONTRIBUTORS)))
     
     # 2. analyze path
     _analyze_path(_args.pkgname)
