@@ -203,14 +203,14 @@ def _save_package_config(filename, config):
 def _load_package_config(filename): 
     # 1. check if "filename" file exists
     if os.path.exists(filename) == False:  
-        return False  
+        return None  
 
     # 2. check that "filename" is illegal, Waiting for user processing
     try: 
         with open(filename, 'r') as file:
             json.load(file)
     except ValueError: 
-        return False 
+        return None 
 
     # 3. load package config
     with open(filename, 'r') as file:
@@ -470,6 +470,10 @@ def _update_package(pkgname, version = None, license = None):
     # 1. Read the previously generated configuration 
     _package_config_path = os.path.join(_buildpkg_packages_path, pkgname, "config.json")  
     _package_config = _load_package_config(_package_config_path)
+
+    if _package_config == None: 
+        _run_log.error("The [%s] package was not found, exit buildpkg update." % (pkgname))  
+        exit(1)
 
     _replace_list = {
         "username"       : _config["username"], 
