@@ -2,3 +2,6 @@
 /__pycache__
 /build
 /dist
+/*.bat
+/packages
+packages/*.*
