@@ -40,16 +40,18 @@ import platform
 # --------------------------------------------------------------------------------
 # Info and config 
 # --------------------------------------------------------------------------------
-_BUILDPKG_VERSION      = "v0.2.0" 
+_BUILDPKG_VERSION      = "v0.2.1" 
 _BUILDPKG_AUTHOR       = "liu2guang" 
 _BUILDPKG_LICENSE      = "GPLv3" 
-_BUILDPKG_RELEASE      =  False
+_BUILDPKG_RELEASE      =  True
 
 _BUILDPKG_CONTRIBUTORS = {
     "liu2guang" : "https://github.com/liu2guang", 
     "balanceTWK": "https://github.com/balanceTWK" 
 }
-_BUILDPKG_LOG_FORMAT   = "[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s" 
+_BUILDPKG_DEF_LOG_FORMAT = "[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s" 
+_BUILDPKG_RUN_LOG_FORMAT = "[Buildpkg] %(message)s" 
+_BUILDPKG_PKG_LOG_FORMAT = "[%(asctime)s %(filename)s L%(lineno).4d %(levelname)-8s]: %(message)s" 
 
 _BUILDPKG_RUN_LOG_FILE = "buildpkg.log"
 _BUILDPKG_PKG_LOG_FILE = os.path.join("packages", "pkglist.log") 
@@ -93,7 +95,7 @@ _config_default = """
 # Shell cmd 
 # --------------------------------------------------------------------------------
 _parser = argparse.ArgumentParser(
-    description = "Quick build rt-thread pkg toolkits", 
+    description = "Quick build rt-thread pkg toolkits %s!" % _BUILDPKG_VERSION, 
     epilog = "You can find the latest version form https://github.com/rtpkgs/buildpkg"
     )
 _parser.add_argument(  "action"   ,        type = str, help = "The action of build package by buildpkg", choices=["make", "update"]) 
@@ -107,14 +109,14 @@ _args = _parser.parse_args()
 # --------------------------------------------------------------------------------
 # Create log object
 # --------------------------------------------------------------------------------
-def _create_log(log_name, log_path, level = logging.INFO, console = True):
+def _create_log(log_name, log_path, level = logging.INFO, console = True, format = _BUILDPKG_DEF_LOG_FORMAT):
     path = os.path.dirname(os.path.abspath(log_path))
     if os.path.exists(path) == False: 
         os.makedirs(path) 
 
     log = logging.getLogger(log_name) 
     log.setLevel(logging.DEBUG) 
-    format = logging.Formatter(_BUILDPKG_LOG_FORMAT) 
+    format = logging.Formatter(format) 
 
     f = logging.FileHandler(log_path)
     f.setFormatter(format)
@@ -532,8 +534,8 @@ def main():
     global _run_log 
     global _pkg_log 
 
-    _run_log = _create_log("run_log", _BUILDPKG_RUN_LOG_FILE, logging.DEBUG if _BUILDPKG_RELEASE == False else logging.INFO, True)
-    _pkg_log = _create_log("pkg_log", _BUILDPKG_PKG_LOG_FILE, logging.DEBUG, False) 
+    _run_log = _create_log("run_log", _BUILDPKG_RUN_LOG_FILE, logging.DEBUG if _BUILDPKG_RELEASE == False else logging.INFO, True, _BUILDPKG_RUN_LOG_FORMAT)
+    _pkg_log = _create_log("pkg_log", _BUILDPKG_PKG_LOG_FILE, logging.DEBUG, False, _BUILDPKG_PKG_LOG_FORMAT) 
 
     _run_log.info("<< Start run buildpkg >>")
     _run_log.info("Version      : %s" % (_BUILDPKG_VERSION))
