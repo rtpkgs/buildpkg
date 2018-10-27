@@ -19,10 +19,6 @@ cwd = GetCurrentDir()
 inc = [] 
 src = []
 
-# debug info
-print(inc)
-print(src)
-
 # Remove ignore src and 
 list_ignore_inc = []
 list_ignore_src = []
