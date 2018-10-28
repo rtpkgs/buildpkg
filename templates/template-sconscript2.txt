@@ -1,15 +1,11 @@
 #-*- encoding: utf-8 -*-
 #---------------------------------------------------------------------------------
-# @File:   Sconscript 
+# @File:   Sconscript for package 
 # @Author: liu2guang
-# @Date:   2018-09-27 18:07:00(v0.1.0) 
+# @Date:   2018-09-19 18:07:00(v0.1.0) 
 # 
 # @LICENSE: GPLv3: https://github.com/rtpkgs/buildpkg/blob/master/LICENSE.
-# 
-# Change Logs:
-# Date           Author         Notes 
-# 2018-09-27     liu2guang      create a template file. 
-# 
+#
 #---------------------------------------------------------------------------------
 import os
 from building import * 
@@ -19,34 +15,57 @@ Import('rtconfig')
 #---------------------------------------------------------------------------------
 # Package configuration
 #---------------------------------------------------------------------------------
-PKGNAME = "libutils"
+PKGNAME = "libxxx"
 VERSION = "v1.0.0"
-DEPENDS = ["PKG_USING_LIBUTILS"]
+DEPENDS = ["PKG_USING_XXX"]
 
 #---------------------------------------------------------------------------------
 # Compile the configuration 
+#
+# SOURCES: Need to compile c and c++ source
+# 
+# LOCAL_CPPPATH: Local file path (.h/.c/.cpp)
+# LOCAL_CCFLAGS: Local compilation parameter 
+# LOCAL_ASFLAGS: Local assembly parameters
+# 
+# CPPPATH: Global file path (.h/.c/.cpp) # no pass!!!
+# CCFLAGS: Global compilation parameter 
+# ASFLAGS: Global assembly parameters
+#
+# CPPDEFINES: Global macro definition
+# LOCAL_CPPDEFINES: Local macro definition 
+# 
+# LIBS: Specify the static library that need to be linked
+# LIBPATH: Specify the search directory for the library file (.lib/.a)
+#
+# LINKFLAGS: Link options
 #---------------------------------------------------------------------------------
-SOURCES          = ["libutils/hash.c", "libutils/hexdump.c", "libutils/usage.c", "libutils/console.c"] 
+SOURCES          = [] 
 
-CPPPATH          = [] 
-CCFLAGS          = " -std=gnu99" # no pass
-ASFLAGS          = ""
-
-LOCAL_CPPPATH    = ["./libutils"] 
-LOCAL_CCFLAGS    = " -std=gnu99" 
+LOCAL_CPPPATH    = [] 
+LOCAL_CCFLAGS    = "" 
 LOCAL_ASFLAGS    = ""
 
-CPPDEFINES       = ["CPPDEFINES"]
-LOCAL_CPPDEFINES = ["LOCAL_CPPDEFINES"]
+CPPPATH          = [] 
+CCFLAGS          = "" 
+ASFLAGS          = ""
 
-LIBS             = ["libmm"] # keil libmm, gcc mm
-LIBPATH          = [os.path.join(GetCurrentDir(), "libutils")] 
+CPPDEFINES       = []
+LOCAL_CPPDEFINES = []
+
+LIBS             = [] 
+LIBPATH          = [] 
 
 LINKFLAGS        = "" 
 
 #---------------------------------------------------------------------------------
 # Feature clip configuration, optional 
 #---------------------------------------------------------------------------------
+if GetDepend(['XXX_USING_FUN1']) == True: 
+    pass
+
+if GetDepend(['XXX_USING_FUN2']) == False:
+    pass
 
 #---------------------------------------------------------------------------------
 # Compiler platform configuration, optional
@@ -61,7 +80,7 @@ if rtconfig.CROSS_TOOL == "keil":
     pass
 
 #---------------------------------------------------------------------------------
-# Warning: internal related processing, developers do not modify!!!
+# Warning: internal related processing, developers do not modify!!! 
 #---------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------
@@ -84,16 +103,35 @@ for index, value in enumerate(LOCAL_CPPPATH):
 if rtconfig.CROSS_TOOL == "gcc": # no test
     for index, value in enumerate(LIBS): 
         if value.startswith("lib") == True: 
-            print("Automatic fix the nonstandard lib name, %s -> %s" % (LIBS[index], LIBS[index].lstrip("lib")))
+            print("Automatic fix the nonstandard lib name, %s -> %s" % 
+                (LIBS[index], LIBS[index].lstrip("lib")))
             LIBS[index] = LIBS[index].lstrip("lib")
             
 elif rtconfig.CROSS_TOOL == "keil": 
     for index, value in enumerate(LIBS): 
         if value.startswith("lib") == False: 
-            print("Automatic fix the nonstandard lib name, %s -> %s" % (LIBS[index], "lib" + LIBS[index]))
+            print("Automatic fix the nonstandard lib name, %s -> %s" % 
+                (LIBS[index], "lib" + LIBS[index]))
             LIBS[index] = "lib" + LIBS[index]
 
 LIBPATH += [root] 
+
+#---------------------------------------------------------------------------------
+# Auto search source files and paths, when SOURCES/CPPPATH/LOCAL_CPPPATH are empty 
+#---------------------------------------------------------------------------------
+if not SOURCES: 
+    for dirpath, dirnames, filenames in os.walk(root): 
+        for name in filenames:
+            suffix = os.path.splitext(name)[1]
+            if suffix == '.c' or suffix == '.cpp': 
+                SOURCES.append(os.path.join(dirpath, name))
+
+if not LOCAL_CPPPATH and not CPPPATH: 
+    for dirpath, dirnames, filenames in os.walk(root): 
+        for dir in dirnames:
+            abs_path = os.path.join(dirpath, dir)
+            if not ".git" in abs_path:
+                LOCAL_CPPPATH.append(abs_path)
 
 #---------------------------------------------------------------------------------
 # Sub target
@@ -121,4 +159,4 @@ objs = DefineGroup(name = PKGNAME, src = SOURCES, depend = DEPENDS,
                    LIBPATH          = LIBPATH,
                    LINKFLAGS        = LINKFLAGS)  
 
-Return("objs")
+Return("objs") 
