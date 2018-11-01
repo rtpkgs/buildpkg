@@ -79,12 +79,12 @@ _config_default = """
 
     "templates": 
     {
-        "readme_md"         : "template-readme-rtt.txt",
-        "sconscript"        : "template-sconscript.txt", 
-        "sconscript_example": "template-sconscript-example.txt", 
-        "ci_github"         : "template-ci-github.txt",
-        "kconfig"           : "template-kconfig.txt",
-        "package_json"      : "template-package-json.txt"
+        "readme_md"         : "template-readme-rtt.md",
+        "sconscript"        : "template-sconscript.py", 
+        "sconscript_example": "template-sconscript-example.py", 
+        "ci_github"         : "template-ci-github.yml",
+        "kconfig"           : "template-kconfig",
+        "package_json"      : "template-package.json"
     },
     "pkg_def_version"       : "v1.0.0", 
     "commit_content"        : "[builpkg] Use the buildpkg tool to quickly build ${pkgname}'s packages!" 
@@ -576,5 +576,6 @@ if __name__ == "__main__":
         main() 
     except:
         _pkg_log.exception(sys.exc_info()) 
-        sys.exit("sorry, goodbye!")
+        # sys.exit("Sorry, goodbye!")
+        _run_log("Sorry, goodbye!"); 
 
