@@ -124,21 +124,21 @@ LIBPATH += [root]
 #---------------------------------------------------------------------------------
 # Auto search source files and paths, when SOURCES/CPPPATH/LOCAL_CPPPATH are empty 
 #---------------------------------------------------------------------------------
-_SOURCES_IGNORE = SOURCES_IGNORE + ${list_ignore_inc} 
-_CPPPATH_IGNORE = CPPPATH_IGNORE + ${list_ignore_src} 
+_SOURCES_IGNORE = SOURCES_IGNORE + ${list_ignore_src} 
+_CPPPATH_IGNORE = CPPPATH_IGNORE + ${list_ignore_inc} 
 
 if not SOURCES: 
     for dirpath, dirnames, filenames in os.walk(root): 
         for name in filenames:
             suffix = os.path.splitext(name)[1]
-            if (suffix == '.c' or suffix == '.cpp') and (not suffix in _SOURCES_IGNORE): 
+            if (suffix == '.c' or suffix == '.cpp') and (not name in _SOURCES_IGNORE): 
                 SOURCES.append(os.path.join(dirpath, name))
 
 if not LOCAL_CPPPATH and not CPPPATH: 
     for dirpath, dirnames, filenames in os.walk(root): 
         for dir in dirnames:
             abs_path = os.path.join(dirpath, dir)
-            if (not ".git" in abs_path) and (not suffix in _SOURCES_IGNORE):
+            if (not ".git" in abs_path) and (not dir in _SOURCES_IGNORE):
                 LOCAL_CPPPATH.append(abs_path) 
 
 #---------------------------------------------------------------------------------
@@ -154,7 +154,7 @@ if GetDepend(DEPENDS):
 #---------------------------------------------------------------------------------
 # Main target
 #---------------------------------------------------------------------------------
-objs = DefineGroup(name = PKGNAME, src = SOURCES, depend = DEPENDS, 
+objs = +DefineGroup(name = PKGNAME, src = SOURCES, depend = DEPENDS, 
                    CPPPATH          = CPPPATH, 
                    CCFLAGS          = CCFLAGS, 
                    ASFLAGS          = ASFLAGS, 
