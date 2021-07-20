@@ -154,7 +154,7 @@ if GetDepend(DEPENDS):
 #---------------------------------------------------------------------------------
 # Main target
 #---------------------------------------------------------------------------------
-objs = +DefineGroup(name = PKGNAME, src = SOURCES, depend = DEPENDS, 
+objs += DefineGroup(name = PKGNAME, src = SOURCES, depend = DEPENDS, 
                    CPPPATH          = CPPPATH, 
                    CCFLAGS          = CCFLAGS, 
                    ASFLAGS          = ASFLAGS, 
